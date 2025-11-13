@@ -1,0 +1,179 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║         🐍 PresensiRupa - Python 3.11 Version Check Flow Diagram 🐍       ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+USER RUNS SCRIPT
+│
+├─→ ./dev.sh (Linux/macOS)
+├─→ ./start.sh (Linux/macOS)
+├─→ dev.bat (Windows)
+└─→ start.bat (Windows)
+   │
+   ▼
+┌─────────────────────────────────────────────────┐
+│  STEP 1: Detect Current Python Version         │
+│  $ python3 --version                            │
+│  Output: "Python 3.13.5"                        │
+└─────────────────────────────────────────────────┘
+   │
+   ▼
+┌─────────────────────────────────────────────────┐
+│  STEP 2: Extract Version String                │
+│  "Python 3.13.5" → "3.13.5"                    │
+└─────────────────────────────────────────────────┘
+   │
+   ▼
+┌─────────────────────────────────────────────────┐
+│  STEP 3: Get Major.Minor Version               │
+│  "3.13.5" → "3.13"                             │
+└─────────────────────────────────────────────────┘
+   │
+   ▼
+┌─────────────────────────────────────────────────┐
+│  STEP 4: Compare With Required Version         │
+│  Required: 3.11                                 │
+│  Current:  3.13                                 │
+│                                                 │
+│  3.13 == 3.11?                                  │
+└─────────────────────────────────────────────────┘
+   │
+   ├──────────────────────┬──────────────────────┤
+   │                      │                      │
+   ▼ YES (MATCH)          ▼ NO (MISMATCH)        
+┌──────────────────┐    ┌────────────────────────┐
+│  ✅ CONTINUE     │    │  ⚠️ SHOW WARNING      │
+│  NORMALLY        │    │  & ASK USER           │
+│                  │    │                        │
+│  ✅ Python       │    │  ❌ Version Mismatch! │
+│  3.11.x is       │    │  Current: 3.13.5      │
+│  correct!        │    │  Required: 3.11.x     │
+│                  │    │                        │
+│  🔧 Activate     │    │  Options:             │
+│  venv            │    │  1. Install 3.11      │
+│  📦 Install deps │    │  2. Use python3.11    │
+│  🚀 Start        │    │  3. Continue anyway   │
+│  services        │    │                        │
+└──────────────────┘    │  Continue? (y/n):     │
+   │                    └────────────────────────┘
+   │                     │
+   │              ┌──────┴──────┐
+   │              │             │
+   │              ▼ YES        ▼ NO
+   │         ┌─────────┐   ┌──────────┐
+   │         │ ⚠️      │   │ 🛑       │
+   │         │ PROCEED │   │ CANCEL   │
+   │         │ AT RISK │   │ SETUP    │
+   │         │         │   │          │
+   │         │ ��      │   │ Exit     │
+   │         │ Activate│   │ with code│
+   │         │ venv    │   │ 1        │
+   │         │ 📦 Inst │   │          │
+   │         │ 🚀 Start│   │ User     │
+   │         │ with    │   │ should   │
+   │         │ warning │   │ install  │
+   │         │         │   │ Python   │
+   │         │         │   │ 3.11     │
+   │         └─────────┘   └──────────┘
+   │              │              │
+   └──────────────┴──────────────┘
+         │
+         ▼
+    ┌─────────────────────────┐
+    │  CONTINUE SETUP         │
+    │  - Activate venv        │
+    │  - Install dependencies │
+    │  - Start backend        │
+    │  - Start frontend       │
+    │  - Open browser         │
+    └─────────────────────────┘
+         │
+         ▼
+    ┌─────────────────────────┐
+    │  ✅ SETUP COMPLETE      │
+    │                         │
+    │  Backend: :8000         │
+    │  Frontend: :5173        │
+    └─────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+SUPPORTED PYTHON VERSIONS & ACTIONS:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Python 3.10.x │ ⚠️ MISMATCH │ Show warning, offer options        │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Python 3.11.x │ ✅ CORRECT  │ Continue normally without warning   │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Python 3.12.x │ ⚠️ MISMATCH │ Show warning, offer options        │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Python 3.13.x │ ⚠️ MISMATCH │ Show warning, offer options        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+USER RESPONSE OPTIONS DURING MISMATCH:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  "Continue with Python 3.13.5? (y/n):"                                 │
+│                                                                         │
+│  ┌─────────┐                              ┌─────────┐                  │
+│  │   (y)   │                              │   (n)   │                  │
+│  │ YES     │                              │ NO      │                  │
+│  └────┬────┘                              └────┬────┘                  │
+│       │                                        │                       │
+│       ▼                                        ▼                       │
+│  ⚠️ Warning: "Proceeding with                 🛑 "Setup cancelled"    │
+│     Python 3.13.5 (not recommended)"          Exit with code 1        │
+│                                                                        │
+│  Script continues with version warning       User should install      │
+│  May have compatibility issues               Python 3.11 & retry      │
+│                                                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+KEY FILES UPDATED:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ STARTUP SCRIPTS (with version check added):                            │
+│                                                                         │
+│ ✅ dev.sh         - Linux/macOS development mode                      │
+│ ✅ start.sh       - Linux/macOS production mode                       │
+│ ✅ dev.bat        - Windows development mode                          │
+│ ✅ start.bat      - Windows production mode                           │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│ DOCUMENTATION (newly created):                                         │
+│                                                                         │
+│ ✅ PYTHON_VERSION.md          - Installation guide (all OS)           │
+│ ✅ PYTHON_VERSION_UPDATE.md   - Implementation details               │
+│ ✅ IMPLEMENTATION_STATUS.md   - Complete summary                     │
+│ ✅ SCRIPTS_GUIDE.md           - Updated with Python section          │
+│ ✅ VERSION_CHECK_FLOW.txt     - This file                            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+INSTALLATION LOCATIONS FOR PYTHON 3.11:
+
+macOS (Homebrew):     /usr/local/opt/python@3.11/bin/python3.11
+Ubuntu (apt):         /usr/bin/python3.11
+Windows (PATH):       C:\Users\<username>\AppData\Local\Programs\Python\Python311\
+pyenv:                ~/.pyenv/versions/3.11.x/bin/python
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+LAST UPDATED: November 13, 2025
+STATUS: ✅ IMPLEMENTATION COMPLETE
+
+═══════════════════════════════════════════════════════════════════════════
