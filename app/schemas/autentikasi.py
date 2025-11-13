@@ -41,8 +41,8 @@ class TokenAkses(BaseModel):
     """
     Schema untuk response token.
     """
-    token_akses: str
-    tipe_token: str = "bearer"
+    access_token: str
+    token_type: str = "bearer"
 
 
 class PenggunaDaftarResponse(BaseModel):

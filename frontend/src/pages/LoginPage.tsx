@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'react-toastify'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/stores/auth'
@@ -35,10 +36,30 @@ export function LoginPage() {
       setUser(profile)
       setError(null)
 
+      // Show success notification
+      toast.success(`Selamat datang, ${profile.nama_depan}! 👋`, {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+
       navigate('/dashboard')
     } catch (error) {
       const message = getErrorMessage(error)
       setError(message)
+
+      // Show error notification
+      toast.error(`Login Gagal: ${message}`, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
     } finally {
       setIsLoading(false)
     }

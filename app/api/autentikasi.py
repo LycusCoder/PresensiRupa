@@ -215,8 +215,8 @@ async def masuk_pengguna(
         token = buat_token_akses({"id_pengguna": pengguna.id_pengguna})
         
         return {
-            "token_akses": token,
-            "tipe_token": "bearer"
+            "access_token": token,
+            "token_type": "bearer"
         }
     
     except HTTPException:
