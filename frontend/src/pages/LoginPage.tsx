@@ -27,13 +27,17 @@ export function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setIsLoading(true)
-      const response = await apiService.login(data)
-      const profile = await apiService.getProfile()
+  setIsLoading(true)
+  const response = await apiService.login(data)
 
-      localStorage.setItem('token', response.access_token)
-      setToken(response.access_token)
-      setUser(profile)
+  // Simpan token terlebih dahulu supaya request berikutnya menyertakan header Authorization
+  localStorage.setItem('token', response.access_token)
+  setToken(response.access_token)
+
+  // Setelah token tersimpan, ambil profil pengguna
+  const profile = await apiService.getProfile()
+
+  setUser(profile)
       setError(null)
 
       // Show success notification
