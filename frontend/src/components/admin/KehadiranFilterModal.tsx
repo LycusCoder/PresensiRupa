@@ -8,19 +8,19 @@ interface FilterOptions {
   search?: string
 }
 
-interface FilterKehadiranModalProps {
+interface KehadiranFilterModalProps {
   isOpen: boolean
   onClose: () => void
   onApply: (filters: FilterOptions) => void
   currentFilters: FilterOptions
 }
 
-export function FilterKehadiranModal({
+export function KehadiranFilterModal({
   isOpen,
   onClose,
   onApply,
   currentFilters
-}: FilterKehadiranModalProps) {
+}: KehadiranFilterModalProps) {
   const [filters, setFilters] = useState<FilterOptions>(currentFilters)
 
   if (!isOpen) return null
