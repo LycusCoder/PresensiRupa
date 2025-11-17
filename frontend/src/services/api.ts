@@ -1,5 +1,18 @@
 import axios, { AxiosInstance } from 'axios'
-import { LoginRequest, RegisterRequest, TokenResponse, Pengguna, UpdateProfilRequest, CheckInRequest, CheckInResponse, AttendanceRecord } from '@/types'
+import { 
+  LoginRequest, 
+  RegisterRequest, 
+  TokenResponse, 
+  Pengguna, 
+  UpdateProfilRequest, 
+  CheckInRequest, 
+  CheckInResponse, 
+  AttendanceRecord,
+  StatistikDashboard,
+  TrendKehadiranResponse,
+  AktivitasTerbaruResponse,
+  DaftarKaryawanResponse
+} from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001'
 
@@ -99,6 +112,50 @@ class ApiService {
 
   async getAttendanceHistory(): Promise<AttendanceRecord[]> {
     const response = await this.client.get<AttendanceRecord[]>('/absensi/riwayat')
+    return response.data
+  }
+
+  // ========== ADMIN ==========
+  
+  /**
+   * GET /admin/statistik
+   * Ambil statistik dashboard admin (total karyawan, hadir hari ini, dll)
+   */
+  async getStatistik(): Promise<StatistikDashboard> {
+    const response = await this.client.get<StatistikDashboard>('/admin/statistik')
+    return response.data
+  }
+
+  /**
+   * GET /admin/trend-kehadiran?hari=7
+   * Ambil data trend kehadiran untuk N hari terakhir
+   * @param hari - Jumlah hari (default: 7, min: 1, max: 30)
+   */
+  async getTrendKehadiran(hari: number = 7): Promise<TrendKehadiranResponse> {
+    const response = await this.client.get<TrendKehadiranResponse>('/admin/trend-kehadiran', {
+      params: { hari }
+    })
+    return response.data
+  }
+
+  /**
+   * GET /admin/aktivitas-terbaru?limit=5
+   * Ambil aktivitas absensi terbaru
+   * @param limit - Jumlah aktivitas (default: 5, min: 1, max: 50)
+   */
+  async getAktivitasTerbaru(limit: number = 5): Promise<AktivitasTerbaruResponse> {
+    const response = await this.client.get<AktivitasTerbaruResponse>('/admin/aktivitas-terbaru', {
+      params: { limit }
+    })
+    return response.data
+  }
+
+  /**
+   * GET /admin/daftar-karyawan
+   * Ambil daftar lengkap semua karyawan
+   */
+  async getDaftarKaryawan(): Promise<DaftarKaryawanResponse> {
+    const response = await this.client.get<DaftarKaryawanResponse>('/admin/daftar-karyawan')
     return response.data
   }
 }
