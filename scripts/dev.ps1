@@ -115,7 +115,7 @@ Write-Host ""
 # Start Backend
 $BackendLog = Join-Path $LogDir "backend.log"
 Write-Host "🔄 Starting Backend... Log available at logs\backend.log"
-$PythonwPath = Join-Path $VenvPath "Scripts\pythonw.exe"
+$PythonwPath = Join-Path $VenvPath "Scripts\python.exe"
 if (-not (Test-Path $PythonwPath)) {
     Write-Host "⚠️ pythonw.exe not found, falling back to python.exe" -ForegroundColor Yellow
     $PythonwPath = Join-Path $VenvPath "Scripts\python.exe"
