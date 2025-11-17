@@ -123,6 +123,64 @@ export interface DaftarKaryawanResponse {
   total: number
 }
 
+// ========== FASE 2.3 - KELOLA KARYAWAN ==========
+
+export interface UpdateKaryawanRequest {
+  nama_depan?: string
+  nama_belakang?: string
+  jabatan?: string
+  alamat_surel?: string
+  catatan_admin?: string
+}
+
+export interface LogAbsensiItem {
+  id_log: number
+  waktu: string // ISO datetime
+  status: string // "SUKSES" | "GAGAL"
+  tipe_kehadiran: string
+  jumlah_cocok: number | null
+}
+
+export interface RiwayatKaryawanResponse {
+  karyawan: KaryawanItem
+  riwayat: LogAbsensiItem[]
+  total: number
+}
+
+// ========== FASE 2.4 - KELOLA KEHADIRAN ==========
+
+export interface LogKehadiranDetail {
+  id_log: number
+  waktu: string // ISO datetime
+  status: string
+  tipe_kehadiran: string
+  jumlah_cocok: number | null
+  
+  // Data karyawan (join)
+  id_pengguna: number
+  nama_lengkap: string
+  id_karyawan: string
+  jabatan: string
+}
+
+export interface DaftarKehadiranResponse {
+  data: LogKehadiranDetail[]
+  total: number
+}
+
+export interface ManualAttendanceRequest {
+  id_pengguna: number
+  tanggal: string // "YYYY-MM-DD"
+  waktu: string // "HH:MM"
+  tipe_kehadiran: string
+  catatan?: string
+}
+
+export interface LogDetailResponse {
+  log: LogKehadiranDetail
+  karyawan: KaryawanItem
+}
+
 // ========== API ERROR ==========
 export interface ApiError {
   detail: string | Array<{ loc: string[]; msg: string; type: string }>

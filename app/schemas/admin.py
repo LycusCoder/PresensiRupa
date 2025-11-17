@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
@@ -91,3 +91,96 @@ class DaftarKaryawanResponse(BaseModel):
     """
     data: List[KaryawanItem] = Field(..., description="List semua karyawan")
     total: int = Field(..., description="Total karyawan")
+
+
+# ========== FASE 2.3 - KELOLA KARYAWAN ==========
+
+class UpdateKaryawanRequest(BaseModel):
+    """
+    Schema untuk request PATCH /admin/karyawan/{id_pengguna}
+    
+    Admin bisa update data karyawan tertentu.
+    """
+    nama_depan: Optional[str] = Field(None, description="Nama depan baru")
+    nama_belakang: Optional[str] = Field(None, description="Nama belakang baru")
+    jabatan: Optional[str] = Field(None, description="Jabatan baru")
+    alamat_surel: Optional[EmailStr] = Field(None, description="Email baru")
+    catatan_admin: Optional[str] = Field(None, description="Catatan admin")
+
+
+class LogAbsensiItem(BaseModel):
+    """
+    Schema untuk satu log absensi.
+    
+    Digunakan dalam response GET /admin/karyawan/{id_pengguna}/riwayat
+    """
+    id_log: int
+    waktu: datetime
+    status: str  # SUKSES/GAGAL
+    tipe_kehadiran: str
+    jumlah_cocok: Optional[int] = None
+
+
+class RiwayatKaryawanResponse(BaseModel):
+    """
+    Schema untuk response GET /admin/karyawan/{id_pengguna}/riwayat
+    
+    Berisi riwayat absensi untuk satu karyawan.
+    """
+    karyawan: KaryawanItem
+    riwayat: List[LogAbsensiItem]
+    total: int
+
+
+# ========== FASE 2.4 - KELOLA KEHADIRAN ==========
+
+class LogKehadiranDetail(BaseModel):
+    """
+    Schema untuk detail log kehadiran dengan join ke data pengguna.
+    
+    Digunakan dalam response GET /admin/kehadiran
+    """
+    id_log: int
+    waktu: datetime
+    status: str
+    tipe_kehadiran: str
+    jumlah_cocok: Optional[int] = None
+    
+    # Data karyawan (join)
+    id_pengguna: int
+    nama_lengkap: str
+    id_karyawan: str
+    jabatan: str
+
+
+class DaftarKehadiranResponse(BaseModel):
+    """
+    Schema untuk response GET /admin/kehadiran
+    
+    Berisi list log kehadiran dengan filters.
+    """
+    data: List[LogKehadiranDetail]
+    total: int
+
+
+class ManualAttendanceRequest(BaseModel):
+    """
+    Schema untuk request POST /admin/kehadiran/manual
+    
+    Admin bisa input kehadiran manual (untuk emergency/correction).
+    """
+    id_pengguna: int = Field(..., description="ID pengguna")
+    tanggal: str = Field(..., description="Tanggal absensi (YYYY-MM-DD)")
+    waktu: str = Field(..., description="Waktu absensi (HH:MM)")
+    tipe_kehadiran: str = Field("Hadir", description="Tipe: Hadir, Izin, Cuti, dll")
+    catatan: Optional[str] = Field(None, description="Catatan untuk entry manual")
+
+
+class LogDetailResponse(BaseModel):
+    """
+    Schema untuk response GET /admin/kehadiran/{id_log}
+    
+    Detail lengkap satu log absensi.
+    """
+    log: LogKehadiranDetail
+    karyawan: KaryawanItem

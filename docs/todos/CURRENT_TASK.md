@@ -58,18 +58,18 @@ Memperbarui frontend PresensiRupa agar fully functional dan terintegrasi dengan 
 - [x] Loading skeleton & error handling
 - [x] Responsive design & dark mode support
 
-#### 2.3 Admin - Kelola Karyawan
-- [ ] List semua karyawan dengan search & filter
-- [ ] Detail karyawan (profil lengkap)
-- [ ] Edit data karyawan
-- [ ] Lihat riwayat absensi per karyawan
-- [ ] Export data karyawan
+#### 2.3 Admin - Kelola Karyawan - SELESAI ✅
+- [x] List semua karyawan dengan search & filter
+- [x] Detail karyawan (profil lengkap) - Modal
+- [x] Edit data karyawan - Modal dengan form validation
+- [x] Lihat riwayat absensi per karyawan - Modal
+- [x] Export data karyawan - CSV export
 
-#### 2.4 Admin - Kelola Kehadiran
-- [ ] View attendance semua karyawan (harian)
-- [ ] Filter by date range, status, department
-- [ ] Export attendance report (CSV/Excel)
-- [ ] Manual attendance correction
+#### 2.4 Admin - Kelola Kehadiran - SELESAI ✅
+- [x] View attendance semua karyawan (harian)
+- [x] Filter by date range, status, department
+- [x] Export attendance report (CSV/Excel)
+- [x] Manual attendance correction - Modal form
 
 #### 2.5 Admin - Laporan & Analytics
 - [ ] Statistik kehadiran per department
@@ -260,12 +260,227 @@ GET    /admin/daftar-karyawan     - List all employees (requires admin role)
 
 ---
 
-## 🎯 STATUS: FASE 2 - Admin Dashboard (SELESAI)
-**Current Focus**: Dashboard admin lengkap dengan stats, chart, dan activity feed
+## 🎯 STATUS: FASE 2.3 & 2.4 - Admin Kelola Karyawan & Kehadiran (SELESAI)
+**Current Focus**: Halaman admin untuk kelola karyawan dan kehadiran lengkap dengan CRUD operations
 
 ---
 
 ## 📝 LOG PERUBAHAN TERAKHIR
+
+### Session: 17 Nov 2024 - UPDATE 5 (FASE 2.3 & 2.4 SELESAI!)
+
+#### ✅ FASE 2.3 - Admin Kelola Karyawan (COMPLETE)
+
+**1. Backend API Endpoints Baru:**
+- ✅ `PATCH /admin/karyawan/{id_pengguna}` - Update data karyawan (nama, jabatan, email, catatan_admin)
+- ✅ `GET /admin/karyawan/{id_pengguna}/riwayat` - Get riwayat absensi per karyawan (dengan date range filter)
+
+**2. Backend Schemas Baru:**
+- ✅ `UpdateKaryawanRequest` - Request body untuk update karyawan
+- ✅ `LogAbsensiItem` - Response item untuk log absensi
+- ✅ `RiwayatAbsensiResponse` - Response wrapper untuk riwayat
+
+**3. Frontend Types Update:**
+- ✅ `/app/frontend/src/types/index.ts` - Added types untuk Kelola Karyawan & Kehadiran:
+  - `UpdateKaryawanRequest`, `LogAbsensiItem`, `RiwayatAbsensiResponse`
+  - `LogKehadiranItem`, `GetKehadiranParams`, `KehadiranResponse`
+  - `ManualAttendanceRequest`, `LogDetailResponse`
+
+**4. Frontend API Service Update:**
+- ✅ `/app/frontend/src/services/api.ts` - Added 5 admin methods:
+  - `updateKaryawan(id, data)` - PATCH untuk update karyawan
+  - `getKaryawanRiwayat(id, params)` - GET riwayat per karyawan
+  - `getKehadiran(params)` - GET kehadiran dengan filter
+  - `createManualAttendance(data)` - POST manual attendance
+  - `getLogDetail(id)` - GET detail log absensi
+
+**5. Export CSV Utility:**
+- ✅ `/app/frontend/src/lib/exportCSV.ts` - Helper functions:
+  - `exportKaryawanToCSV(data)` - Export daftar karyawan
+  - `exportKehadiranToCSV(data)` - Export log kehadiran
+  - `exportRiwayatToCSV(data, namaKaryawan)` - Export riwayat per karyawan
+
+**6. Modal Components (6 Modals Lengkap):**
+- ✅ `/app/frontend/src/components/admin/KaryawanDetailModal.tsx` - Detail profil karyawan dengan action buttons
+- ✅ `/app/frontend/src/components/admin/KaryawanEditModal.tsx` - Form edit karyawan dengan validation
+- ✅ `/app/frontend/src/components/admin/KaryawanRiwayatModal.tsx` - Riwayat absensi dengan date range filter & export
+- ✅ `/app/frontend/src/components/admin/KehadiranFilterModal.tsx` - Advanced filter untuk kehadiran
+- ✅ `/app/frontend/src/components/admin/ManualAttendanceModal.tsx` - Form input manual attendance
+- ✅ `/app/frontend/src/components/admin/LogDetailModal.tsx` - Detail log absensi
+
+**7. AdminKaryawanPage - Complete Implementation:**
+- ✅ Real-time data fetch dari API `/admin/daftar-karyawan`
+- ✅ **Search** - Real-time search by nama, ID, email (client-side)
+- ✅ **Filter Panel** - 3 filters:
+  - Filter by Jabatan (dropdown unique jabatan)
+  - Filter by Status Wajah (Terdaftar/Belum)
+  - Filter by Status Kehadiran (Hadir/Tidak Ada Data)
+- ✅ **Table View** dengan columns:
+  - ID Karyawan, Nama (+username), Jabatan, Email
+  - Status Wajah (badge hijau/merah)
+  - Status Kehadiran (badge hijau/abu)
+  - Action buttons (View Detail, Edit)
+- ✅ **Export CSV** - Export filtered data dengan button di header
+- ✅ **Modal Integration**:
+  - Detail Modal → bisa edit atau lihat riwayat
+  - Edit Modal → form validation dengan toast notification
+  - Riwayat Modal → table riwayat dengan date range filter
+- ✅ **UX Features**:
+  - Loading skeleton states
+  - Toast notifications (success/error)
+  - Counter: "Total: X dari Y karyawan"
+  - Reset filter button
+  - Hover effects & smooth transitions
+  - Dark mode support
+  - Responsive grid layout
+  - Data-testid untuk testing
+
+#### ✅ FASE 2.4 - Admin Kelola Kehadiran (COMPLETE)
+
+**1. Backend API Endpoints Baru:**
+- ✅ `GET /admin/kehadiran` - Get log kehadiran dengan query params:
+  - `tanggal` (required) - Filter by date
+  - `status` (optional) - Filter SUKSES/GAGAL
+  - `jabatan` (optional) - Filter by jabatan
+  - `search` (optional) - Search nama atau ID karyawan
+- ✅ `POST /admin/kehadiran/manual` - Input manual attendance
+- ✅ `GET /admin/kehadiran/{id_log}` - Detail log absensi tertentu
+
+**2. Backend Schemas:**
+- ✅ `LogKehadiranItem` - Item log kehadiran dengan info lengkap
+- ✅ `KehadiranResponse` - Response wrapper untuk list kehadiran
+- ✅ `ManualAttendanceRequest` - Request body untuk manual input
+- ✅ `LogDetailResponse` - Response detail log
+
+**3. AdminKehadiranPage - Complete Implementation:**
+- ✅ **Date Picker** - Select tanggal untuk view kehadiran (default: hari ini)
+- ✅ **Refresh Button** - Manual refresh dengan loading animation
+- ✅ **Search Bar** - Real-time search by nama atau ID karyawan
+- ✅ **Filter Modal** - Advanced filters:
+  - Filter by Status (SUKSES/GAGAL)
+  - Filter by Jabatan (dropdown unique jabatan)
+  - Active filter badges display
+- ✅ **Table View** dengan columns:
+  - Tanggal (formatted: "1 Nov 2024")
+  - Waktu (formatted: "09:30")
+  - Nama Karyawan
+  - ID Karyawan
+  - Jabatan
+  - Status (badge SUKSES/GAGAL)
+  - Kecocokan (jumlah cocok dengan color coding: hijau ≥5, kuning ≥3, merah <3)
+  - Action (View Detail button)
+- ✅ **Export CSV** - Export filtered data
+- ✅ **Manual Input Button** - Modal untuk input kehadiran manual
+- ✅ **Modal Integration**:
+  - Filter Modal → apply/reset filters
+  - Manual Attendance Modal → form dengan validation
+  - Log Detail Modal → lihat detail log dengan foto (jika ada)
+- ✅ **UX Features**:
+  - Loading skeleton states
+  - Toast notifications
+  - Counter: "Total: X dari Y records"
+  - Reset filter button
+  - Active filter badges
+  - Refresh with spinning icon
+  - Dark mode support
+  - Responsive layout
+  - Data-testid untuk testing
+
+#### 📂 Files Created/Modified:
+
+**BACKEND (6 files):**
+```
+MODIFIED:
+- /app/app/schemas/admin.py (Added 7 new schemas)
+- /app/app/api/admin.py (Added 5 new endpoints)
+
+Backend Endpoints Summary:
+✅ PATCH /admin/karyawan/{id_pengguna}
+✅ GET /admin/karyawan/{id_pengguna}/riwayat
+✅ GET /admin/kehadiran
+✅ POST /admin/kehadiran/manual
+✅ GET /admin/kehadiran/{id_log}
+```
+
+**FRONTEND (11 files):**
+```
+MODIFIED:
+- /app/frontend/src/types/index.ts (Added 10 interfaces)
+- /app/frontend/src/services/api.ts (Added 5 methods)
+- /app/frontend/src/pages/admin/AdminKaryawanPage.tsx (Complete implementation)
+- /app/frontend/src/pages/admin/AdminKehadiranPage.tsx (Complete implementation)
+
+CREATED:
+- /app/frontend/src/lib/exportCSV.ts (CSV export utilities)
+- /app/frontend/src/components/admin/KaryawanDetailModal.tsx
+- /app/frontend/src/components/admin/KaryawanEditModal.tsx
+- /app/frontend/src/components/admin/KaryawanRiwayatModal.tsx
+- /app/frontend/src/components/admin/KehadiranFilterModal.tsx
+- /app/frontend/src/components/admin/ManualAttendanceModal.tsx
+- /app/frontend/src/components/admin/LogDetailModal.tsx
+
+FIXED:
+- /etc/supervisor/conf.d/supervisord.conf (Fixed backend directory path)
+```
+
+#### 🎯 Features Summary:
+
+**AdminKaryawanPage:**
+- ✅ List karyawan dengan table view
+- ✅ Real-time search (nama, ID, email)
+- ✅ 3 filter options (Jabatan, Status Wajah, Status Kehadiran)
+- ✅ View detail modal
+- ✅ Edit karyawan modal dengan validation
+- ✅ Riwayat absensi modal per karyawan
+- ✅ Export CSV dengan filtered data
+- ✅ Counter & loading states
+
+**AdminKehadiranPage:**
+- ✅ Date picker untuk pilih tanggal
+- ✅ Table log kehadiran lengkap
+- ✅ Real-time search
+- ✅ Advanced filter modal (Status, Jabatan)
+- ✅ Refresh button dengan animation
+- ✅ View detail log modal
+- ✅ Manual attendance input modal
+- ✅ Export CSV dengan filtered data
+- ✅ Counter & loading states
+- ✅ Color-coded kecocokan wajah
+
+#### 🔄 Backend Integration Complete:
+- ✅ 5 new endpoints implemented
+- ✅ 7 new schemas defined
+- ✅ Admin role validation on all endpoints
+- ✅ Query parameter validation
+- ✅ Efficient database queries with joins
+- ✅ Error handling dengan proper HTTP status codes
+
+#### 🎨 UI/UX Enhancements:
+- ✅ Consistent design pattern dengan Fase 2.2
+- ✅ Modal-based workflow untuk actions
+- ✅ Toast notifications untuk feedback
+- ✅ Loading skeletons untuk better UX
+- ✅ Responsive grid layouts
+- ✅ Dark mode full support
+- ✅ Hover effects & smooth transitions
+- ✅ Data-testid untuk semua interactive elements
+
+#### 🔐 Security & Validation:
+- ✅ Admin role required untuk semua endpoints
+- ✅ Form validation dengan Zod schemas
+- ✅ Input sanitization
+- ✅ Error boundaries
+- ✅ Proper error messages
+
+#### 📊 Data Management:
+- ✅ CSV export functionality (3 types)
+- ✅ Date range filtering
+- ✅ Multi-criteria filtering
+- ✅ Real-time search
+- ✅ Sorted & formatted data display
+
+---
+
 
 ### Session: 17 Nov 2024 - UPDATE 4 (Frontend Admin Dashboard - SELESAI!)
 

@@ -11,7 +11,14 @@ import {
   StatistikDashboard,
   TrendKehadiranResponse,
   AktivitasTerbaruResponse,
-  DaftarKaryawanResponse
+  DaftarKaryawanResponse,
+  UpdateKaryawanRequest,
+  KaryawanItem,
+  RiwayatKaryawanResponse,
+  DaftarKehadiranResponse,
+  ManualAttendanceRequest,
+  LogAbsensiItem,
+  LogDetailResponse
 } from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001'
@@ -115,7 +122,7 @@ class ApiService {
     return response.data
   }
 
-  // ========== ADMIN ==========
+  // ========== ADMIN - DASHBOARD ==========
   
   /**
    * GET /admin/statistik
@@ -156,6 +163,79 @@ class ApiService {
    */
   async getDaftarKaryawan(): Promise<DaftarKaryawanResponse> {
     const response = await this.client.get<DaftarKaryawanResponse>('/admin/daftar-karyawan')
+    return response.data
+  }
+
+  // ========== ADMIN - KELOLA KARYAWAN (FASE 2.3) ==========
+
+  /**
+   * PATCH /admin/karyawan/{id_pengguna}
+   * Update data karyawan
+   */
+  async updateKaryawan(id_pengguna: number, data: UpdateKaryawanRequest): Promise<KaryawanItem> {
+    const response = await this.client.patch<KaryawanItem>(`/admin/karyawan/${id_pengguna}`, data)
+    return response.data
+  }
+
+  /**
+   * GET /admin/karyawan/{id_pengguna}/riwayat
+   * Ambil riwayat absensi satu karyawan
+   */
+  async getKaryawanRiwayat(
+    id_pengguna: number,
+    tanggal_mulai?: string,
+    tanggal_akhir?: string
+  ): Promise<RiwayatKaryawanResponse> {
+    const response = await this.client.get<RiwayatKaryawanResponse>(
+      `/admin/karyawan/${id_pengguna}/riwayat`,
+      {
+        params: {
+          tanggal_mulai,
+          tanggal_akhir
+        }
+      }
+    )
+    return response.data
+  }
+
+  // ========== ADMIN - KELOLA KEHADIRAN (FASE 2.4) ==========
+
+  /**
+   * GET /admin/kehadiran
+   * Ambil daftar kehadiran dengan filters
+   */
+  async getKehadiran(
+    tanggal?: string,
+    status_filter?: string,
+    jabatan?: string,
+    search?: string
+  ): Promise<DaftarKehadiranResponse> {
+    const response = await this.client.get<DaftarKehadiranResponse>('/admin/kehadiran', {
+      params: {
+        tanggal,
+        status_filter,
+        jabatan,
+        search
+      }
+    })
+    return response.data
+  }
+
+  /**
+   * POST /admin/kehadiran/manual
+   * Buat entry kehadiran manual
+   */
+  async createManualAttendance(data: ManualAttendanceRequest): Promise<LogAbsensiItem> {
+    const response = await this.client.post<LogAbsensiItem>('/admin/kehadiran/manual', data)
+    return response.data
+  }
+
+  /**
+   * GET /admin/kehadiran/{id_log}
+   * Ambil detail satu log absensi
+   */
+  async getLogDetail(id_log: number): Promise<LogDetailResponse> {
+    const response = await this.client.get<LogDetailResponse>(`/admin/kehadiran/${id_log}`)
     return response.data
   }
 }
