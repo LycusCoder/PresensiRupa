@@ -5,11 +5,15 @@ import {
   Users, 
   Calendar, 
   BarChart3, 
-  Settings, 
   LogOut, 
   Menu, 
   X, 
-  Bell 
+  Bell,
+  User,
+  Settings,
+  Moon,
+  Sun,
+  ChevronDown
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { toast } from 'react-toastify'
@@ -23,6 +27,7 @@ export function AdminLayout() {
   const [darkMode, setDarkMode] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
@@ -48,10 +53,29 @@ export function AdminLayout() {
     else document.documentElement.classList.remove('dark')
   }, [darkMode])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('[data-dropdown]')) {
+        setProfileDropdownOpen(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
   const handleLogout = () => {
     logout()
     toast.success('Berhasil logout!')
     navigate('/masuk')
+  }
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+    toast.info(darkMode ? 'Mode terang diaktifkan' : 'Mode gelap diaktifkan', {
+      autoClose: 1500
+    })
   }
 
   return (
@@ -71,20 +95,18 @@ export function AdminLayout() {
             : sidebarOpen
             ? 'w-72'
             : 'w-0'
-        } ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} border-r ${
-          darkMode ? 'border-gray-700' : 'border-gray-200'
-        } overflow-hidden`}
+        } bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg`}
       >
         <div className="flex flex-col h-full w-72">
-          {/* Logo */}
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          {/* Logo dengan Blue Gradient */}
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-600 to-blue-500">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center ring-2 ring-white/30">
                 <span className="text-white font-bold text-lg">A</span>
               </div>
               <div>
-                <h2 className="font-bold text-lg">Admin Panel</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">PresensiRupa</p>
+                <h2 className="font-bold text-lg text-white">Admin Panel</h2>
+                <p className="text-xs text-blue-100">PresensiRupa</p>
               </div>
             </div>
           </div>
@@ -103,11 +125,10 @@ export function AdminLayout() {
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-red-500 text-white shadow-lg'
-                      : darkMode
-                      ? 'text-gray-300 hover:bg-gray-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
+                  data-testid={`menu-${item.id}`}
                 >
                   <Icon size={20} />
                   <span className="font-medium">{item.label}</span>
@@ -121,6 +142,7 @@ export function AdminLayout() {
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+              data-testid="logout-btn"
             >
               <LogOut size={20} />
               <span className="font-medium">Logout</span>
@@ -131,41 +153,112 @@ export function AdminLayout() {
 
       {/* Main Content */}
       <div className={`${!isMobile && sidebarOpen ? 'ml-72' : ''} flex flex-col min-h-screen transition-all duration-300`}>
-        {/* Header */}
+        {/* Header dengan Blue Gradient */}
         <header className={`fixed top-0 right-0 z-40 transition-all duration-300 ${
           !isMobile && sidebarOpen ? 'left-72' : 'left-0'
-        } ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} border-b ${
-          darkMode ? 'border-gray-700' : 'border-gray-200'
-        }`}>
+        } bg-gradient-to-r from-blue-600 to-blue-500 border-b border-blue-700/30 shadow-lg`}>
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => (isMobile ? setMobileMenuOpen(!mobileMenuOpen) : setSidebarOpen(!sidebarOpen))}
-                className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} transition-colors`}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors text-white"
+                data-testid="toggle-sidebar-btn"
               >
                 {(isMobile ? mobileMenuOpen : sidebarOpen) ? <X size={20} /> : <Menu size={20} />}
               </button>
-              <h1 className="font-bold text-xl">Admin Dashboard</h1>
+              <h1 className="font-bold text-xl text-white">Admin Dashboard</h1>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} relative`}>
+            <div className="flex items-center gap-3">
+              {/* Dark Mode Toggle */}
+              <button 
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors text-white"
+                data-testid="dark-mode-toggle"
+                title={darkMode ? 'Mode Terang' : 'Mode Gelap'}
+              >
+                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+
+              {/* Notification Bell */}
+              <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors text-white relative">
                 <Bell size={20} />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   3
                 </span>
               </button>
 
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {user?.nama_depan?.charAt(0) || 'A'}
-                  </span>
-                </div>
-                <div className="hidden md:block">
-                  <div className="font-medium">{user?.nama_depan || 'Admin'}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{user?.jabatan || 'Administrator'}</div>
-                </div>
+              {/* Profile Dropdown */}
+              <div className="relative" data-dropdown>
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors text-white"
+                  data-testid="profile-dropdown-btn"
+                >
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center ring-2 ring-white/30">
+                    <span className="text-white font-bold text-sm">
+                      {user?.nama_depan?.charAt(0) || 'A'}
+                    </span>
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <div className="font-medium text-sm">{user?.nama_depan || 'Admin'}</div>
+                    <div className="text-xs text-blue-100">{user?.jabatan || 'Administrator'}</div>
+                  </div>
+                  <ChevronDown 
+                    size={16} 
+                    className={`transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {user?.nama_lengkap || `${user?.nama_depan || 'Admin'} ${user?.nama_belakang || ''}`}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'admin@presensirupa.com'}</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        navigate('/admin/profil')
+                        setProfileDropdownOpen(false)
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      data-testid="menu-profil"
+                    >
+                      <User size={18} />
+                      <span>Profil</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        navigate('/admin/pengaturan')
+                        setProfileDropdownOpen(false)
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      data-testid="menu-pengaturan"
+                    >
+                      <Settings size={18} />
+                      <span>Pengaturan</span>
+                    </button>
+                    
+                    <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false)
+                          handleLogout()
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        data-testid="dropdown-logout-btn"
+                      >
+                        <LogOut size={18} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

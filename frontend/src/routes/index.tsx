@@ -22,10 +22,13 @@ import { CheckInPage } from '@/pages/CheckInPage'
 import { FaceRegistrationPage } from '@/pages/FaceRegistrationPage'
 import { AttendanceHistoryPage } from '@/pages/AttendanceHistoryPage'
 
-// Admin Pages (temporary placeholders)
+// Admin Pages
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminKaryawanPage } from '@/pages/admin/AdminKaryawanPage'
 import { AdminKehadiranPage } from '@/pages/admin/AdminKehadiranPage'
+import { AdminLaporanPage } from '@/pages/admin/AdminLaporanPage'
+import { AdminProfilPage } from '@/pages/admin/AdminProfilPage'
+import { AdminPengaturanPage } from '@/pages/admin/AdminPengaturanPage'
 
 export function AppRoutes() {
   return (
@@ -67,6 +70,9 @@ export function AppRoutes() {
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="karyawan" element={<AdminKaryawanPage />} />
           <Route path="kehadiran" element={<AdminKehadiranPage />} />
+          <Route path="laporan" element={<AdminLaporanPage />} />
+          <Route path="profil" element={<AdminProfilPage />} />
+          <Route path="pengaturan" element={<AdminPengaturanPage />} />
         </Route>
 
         {/* 404 */}

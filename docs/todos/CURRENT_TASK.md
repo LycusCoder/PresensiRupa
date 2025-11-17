@@ -71,11 +71,21 @@ Memperbarui frontend PresensiRupa agar fully functional dan terintegrasi dengan 
 - [x] Export attendance report (CSV/Excel)
 - [x] Manual attendance correction - Modal form
 
-#### 2.5 Admin - Laporan & Analytics
-- [ ] Statistik kehadiran per department
-- [ ] Attendance rate trends
-- [ ] Late arrivals report
-- [ ] Monthly summary reports
+#### 2.5 Admin - Laporan & Analytics - SELESAI ✅
+- [x] Statistik kehadiran per department
+- [x] Attendance rate trends
+- [x] Late arrivals report
+- [x] Monthly summary reports
+
+#### 2.6 Admin - Theme & UI Enhancement - SELESAI ✅
+- [x] Update AdminLayout dengan blue gradient theme (mirip login page)
+- [x] Implementasi topbar dropdown menu (klik nama)
+- [x] Menu dropdown: Profil, Pengaturan, Logout
+- [x] Dark mode toggle di topbar
+- [x] Halaman Profil Admin lengkap
+- [x] Halaman Pengaturan Admin lengkap
+- [x] Responsive & modern design
+- [x] All routes registered
 
 ---
 
@@ -266,6 +276,176 @@ GET    /admin/daftar-karyawan     - List all employees (requires admin role)
 ---
 
 ## 📝 LOG PERUBAHAN TERAKHIR
+
+### Session: 17 Nov 2024 - UPDATE 6 (FASE 2.6 - THEME & UI ENHANCEMENT SELESAI! 🎨)
+
+#### ✅ FASE 2.6 - Admin Theme & UI Enhancement (COMPLETE)
+
+**1. AdminLayout - Blue Gradient Theme Update:**
+- ✅ **Sidebar Logo** - Blue gradient header (from-blue-600 to-blue-500) dengan backdrop blur
+- ✅ **Sidebar Menu** - Active menu dengan blue gradient + shadow
+- ✅ **Topbar Header** - Full blue gradient background (mirip login page)
+- ✅ **Dark Mode Toggle** - Button di topbar dengan icon Sun/Moon
+- ✅ **Profile Dropdown** - Klik nama muncul dropdown menu dengan:
+  - User info (nama & email)
+  - Menu: Profil, Pengaturan
+  - Logout option
+- ✅ **Responsive** - Mobile menu overlay tetap berfungsi
+- ✅ **Modern Design** - Glassmorphism, backdrop blur, smooth transitions
+
+**2. Halaman Profil Admin (AdminProfilPage):**
+- ✅ **Profile Card** dengan blue gradient header
+- ✅ **Avatar** - Large avatar dengan initial huruf
+- ✅ **Edit Mode** - Toggle edit dengan button "Edit Profil"
+- ✅ **Form Fields** (editable):
+  - Nama Depan, Nama Belakang
+  - Email, Jabatan
+  - Role (read-only)
+  - Tanggal Bergabung (read-only)
+- ✅ **Validation** - Input validation untuk semua field
+- ✅ **Actions** - Save & Cancel buttons dengan loading state
+- ✅ **Info Cards** - Level Akses, Status Akun, ID Karyawan
+- ✅ **Toast Notifications** - Success/error feedback
+- ✅ **Dark Mode** - Full support
+
+**3. Halaman Pengaturan Admin (AdminPengaturanPage):**
+- ✅ **4 Kategori Settings:**
+  
+  **a) Notifikasi:**
+  - Email Notifikasi (toggle)
+  - Push Notifikasi (toggle)
+  - Laporan Harian (toggle)
+  
+  **b) Sistem:**
+  - Auto Backup (toggle)
+  - Frekuensi Backup (dropdown: Hourly/Daily/Weekly/Monthly)
+  - Zona Waktu (dropdown: WIB/WITA/WIT)
+  - Bahasa (dropdown: ID/EN)
+  
+  **c) Keamanan:**
+  - Two-Factor Authentication (toggle)
+  - Session Timeout (input minutes)
+  - Password Expiry (input days)
+  
+  **d) Absensi:**
+  - Auto Clock Out (toggle)
+  - Waktu Clock Out Otomatis (time picker)
+  - Batas Waktu Terlambat (time picker)
+  - Minimum Match Score (number input 1-10)
+
+- ✅ **Toggle Switch Component** - Custom toggle dengan blue gradient
+- ✅ **Action Buttons** - Save & Reset buttons
+- ✅ **Toast Notifications** - Feedback untuk save/reset
+- ✅ **Dark Mode** - Full support
+- ✅ **Icon Labels** - Icons untuk setiap kategori
+
+**4. Routing Update:**
+- ✅ Added `/admin/profil` route → AdminProfilPage
+- ✅ Added `/admin/pengaturan` route → AdminPengaturanPage
+- ✅ Added `/admin/laporan` route → AdminLaporanPage (sudah ada sebelumnya)
+- ✅ Import semua pages di routes/index.tsx
+
+**5. Fixed Backend Directory Issue:**
+- ✅ Created symlink `/app/backend` → `/app/app` untuk supervisor compatibility
+- ✅ Backend service running dengan benar
+- ✅ All services RUNNING (backend, frontend, mongodb, nginx, code-server)
+
+#### 📂 Files Created/Modified:
+
+**FRONTEND (4 files):**
+```
+MODIFIED:
+- /app/frontend/src/layouts/AdminLayout.tsx (Complete theme redesign + dropdown)
+- /app/frontend/src/routes/index.tsx (Added profil, pengaturan, laporan routes)
+
+CREATED:
+- /app/frontend/src/pages/admin/AdminProfilPage.tsx (Complete profile page)
+- /app/frontend/src/pages/admin/AdminPengaturanPage.tsx (Complete settings page)
+```
+
+**SYSTEM FIX:**
+```
+- Created symlink: /app/backend → /app/app
+- Restarted all supervisor services
+```
+
+#### 🎨 Theme Features:
+
+**Blue Gradient Everywhere:**
+- ✅ Sidebar header: Blue gradient dengan white text
+- ✅ Topbar: Full blue gradient dengan glassmorphism buttons
+- ✅ Active menu: Blue gradient dengan shadow glow
+- ✅ Profile avatar: Blue gradient background
+- ✅ Primary buttons: Blue gradient dengan shadow
+- ✅ Toggle switches: Blue gradient when enabled
+
+**UI Enhancements:**
+- ✅ Backdrop blur effects (glassmorphism)
+- ✅ Ring borders dengan opacity
+- ✅ Smooth transitions (300ms)
+- ✅ Hover effects dengan scale & shadow
+- ✅ Dropdown dengan smooth animation
+- ✅ Color-coded icons per category
+- ✅ Consistent spacing & padding
+- ✅ Modern card designs
+
+**UX Features:**
+- ✅ Click outside to close dropdown
+- ✅ Loading states untuk all actions
+- ✅ Toast notifications untuk feedback
+- ✅ Validation dengan error messages
+- ✅ Reset to default option
+- ✅ Edit mode toggle
+- ✅ Dark mode toggle accessible
+- ✅ Responsive layouts
+
+#### 🔐 Dropdown Menu Options:
+
+**Profile Dropdown (Topbar):**
+1. **Header Section:**
+   - Nama lengkap user
+   - Email user
+   
+2. **Menu Items:**
+   - 👤 Profil → Navigate ke `/admin/profil`
+   - ⚙️ Pengaturan → Navigate ke `/admin/pengaturan`
+   
+3. **Logout Section:**
+   - 🚪 Logout → Logout & redirect ke `/masuk`
+
+#### 📊 Settings Categories:
+
+**Notifikasi (Bell icon):**
+- Email, Push, Daily Report toggles
+
+**Sistem (Database icon):**
+- Backup, Timezone, Language settings
+
+**Keamanan (Shield icon):**
+- 2FA, Session, Password settings
+
+**Absensi (Clock icon):**
+- Auto clock out, Late threshold, Match score
+
+#### ✨ Visual Highlights:
+
+**Color Scheme:**
+- Primary: Blue gradient (from-blue-600 to-blue-500)
+- Success: Green (form save)
+- Danger: Red (logout, reset)
+- Info: Gray (neutral actions)
+
+**Typography:**
+- Headers: Bold, large (text-3xl)
+- Labels: Medium, small (text-sm)
+- Values: Normal, readable
+
+**Spacing:**
+- Sections: space-y-6
+- Cards: p-6
+- Inputs: px-4 py-2
+
+---
 
 ### Session: 17 Nov 2024 - UPDATE 5 (FASE 2.3 & 2.4 SELESAI!)
 
