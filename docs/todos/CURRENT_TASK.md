@@ -251,7 +251,79 @@ GET    /absensi/riwayat           - Get attendance history
 
 ## 📝 LOG PERUBAHAN TERAKHIR
 
-### Session: 17 Nov 2024
+### Session: 17 Nov 2024 - UPDATE 2 (Modernisasi Login Page)
+
+#### ✅ Yang Baru Selesai:
+1. **Modernisasi Halaman Login - COMPLETE** 🎨
+   - ✅ `/app/frontend/src/pages/LoginPage.tsx` - Complete redesign dengan design modern 2025
+   - ✅ `/app/frontend/src/components/ui/Input.tsx` - Added icon support & password toggle
+   - ✅ `/app/frontend/src/index.css` - Added custom animations (blob, animation-delay)
+   - ✅ `/app/frontend/package.json` - Added "start" script untuk supervisor compatibility
+
+2. **Fitur Baru di Login Page:**
+   - ✅ Modern split layout (form di kiri, ilustrasi di kanan untuk desktop)
+   - ✅ Glassmorphism effect dengan backdrop blur
+   - ✅ Animated gradient background dengan blob animations
+   - ✅ Show/hide password toggle button dengan icon Eye/EyeOff
+   - ✅ "Ingat Saya" (Remember me) checkbox
+   - ✅ Modern icons dari Lucide React (User, Lock, LogIn, Sparkles)
+   - ✅ Better typography dengan gradient text
+   - ✅ Smooth transitions & hover effects
+   - ✅ Better responsive design untuk mobile
+   - ✅ Statistics cards di sisi kanan (99% Akurasi, <2s Kecepatan, 24/7 Available)
+   - ✅ Data-testid attributes untuk testing
+   - ✅ Role-based redirect tetap berfungsi (admin → /admin/dashboard, karyawan → /dashboard)
+
+3. **Input Component Enhancement:**
+   - ✅ Support untuk icon di kiri/kanan input field
+   - ✅ Auto password show/hide toggle untuk type="password"
+   - ✅ Better focus states & transitions
+   - ✅ Improved accessibility
+
+4. **Custom Animations Added:**
+   - ✅ `@keyframes blob` - Smooth floating animation untuk decorative elements
+   - ✅ `.animation-delay-2000` - Stagger animation timing
+   - ✅ Existing `slideIn` animation tetap ada
+
+#### 🔄 Auth Flow Verification:
+✅ **Login Flow Tetap Sama (No Breaking Changes):**
+1. User input username & password
+2. Form validation dengan Zod
+3. API call → POST /autentikasi/masuk
+4. Save token → localStorage & auth store
+5. Get profile → GET /profil/saya
+6. Role detection → Check jabatan atau id_karyawan
+7. Redirect → admin ke `/admin/dashboard`, karyawan ke `/dashboard`
+
+✅ **Role Detection Logic (Verified):**
+- Di LoginPage.tsx: Explicit check untuk redirect
+- Di auth.ts store: Auto-detect saat setUser()
+- Konsisten dengan logic: jabatan contains "admin" ATAU id_karyawan starts with "ADM"
+
+✅ **Route Guards (Verified):**
+- ProtectedRoute: Check authentication & role
+- PublicRoute: Auto-redirect jika sudah login
+- Role-based access control tetap berfungsi
+
+#### 📂 Files Modified:
+```
+MODIFIED:
+- /app/frontend/src/pages/LoginPage.tsx (Complete redesign)
+- /app/frontend/src/components/ui/Input.tsx (Added icon & password toggle)
+- /app/frontend/src/index.css (Added blob animations)
+- /app/frontend/package.json (Added start script)
+
+NO CHANGES:
+- /app/frontend/src/stores/auth.ts (Auth logic tetap sama)
+- /app/frontend/src/routes/index.tsx (Routing logic tetap sama)
+- /app/frontend/src/services/api.ts (API calls tetap sama)
+- /app/frontend/src/components/ProtectedRoute.tsx (Guards tetap sama)
+- /app/frontend/src/components/PublicRoute.tsx (Guards tetap sama)
+```
+
+---
+
+### Session: 17 Nov 2024 - UPDATE 1 (Setup Awal)
 
 #### ✅ Yang Sudah Selesai:
 1. **Struktur Project Identified**
