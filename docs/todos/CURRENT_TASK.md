@@ -38,7 +38,16 @@ Memperbarui frontend PresensiRupa agar fully functional dan terintegrasi dengan 
 ### **FASE 2: Dashboard Admin** 📊
 **Prioritas: HIGH**
 
-#### 2.1 Admin Dashboard Page
+#### 2.1 Backend API Admin (SELESAI ✅)
+- [x] API Endpoint: GET /admin/statistik - Total karyawan, hadir hari ini, belum absen, tingkat kehadiran
+- [x] API Endpoint: GET /admin/trend-kehadiran?hari=7 - Data chart kehadiran N hari terakhir
+- [x] API Endpoint: GET /admin/aktivitas-terbaru?limit=5 - Recent activities
+- [x] API Endpoint: GET /admin/daftar-karyawan - List semua karyawan
+- [x] Schema: StatistikDashboard, TrendKehadiranResponse, AktivitasTerbaruResponse, DaftarKaryawanResponse
+- [x] Admin role validation dengan get_current_admin dependency
+- [x] Router terdaftar di main.py
+
+#### 2.2 Admin Dashboard Page (Frontend)
 - [ ] Stats card: Total karyawan
 - [ ] Stats card: Hadir hari ini
 - [ ] Stats card: Belum absen hari ini
@@ -46,20 +55,20 @@ Memperbarui frontend PresensiRupa agar fully functional dan terintegrasi dengan 
 - [ ] Recent activity feed
 - [ ] Quick actions (approve face, manage users)
 
-#### 2.2 Admin - Kelola Karyawan
+#### 2.3 Admin - Kelola Karyawan
 - [ ] List semua karyawan dengan search & filter
 - [ ] Detail karyawan (profil lengkap)
 - [ ] Edit data karyawan
 - [ ] Lihat riwayat absensi per karyawan
 - [ ] Export data karyawan
 
-#### 2.3 Admin - Kelola Kehadiran
+#### 2.4 Admin - Kelola Kehadiran
 - [ ] View attendance semua karyawan (harian)
 - [ ] Filter by date range, status, department
 - [ ] Export attendance report (CSV/Excel)
 - [ ] Manual attendance correction
 
-#### 2.4 Admin - Laporan & Analytics
+#### 2.5 Admin - Laporan & Analytics
 - [ ] Statistik kehadiran per department
 - [ ] Attendance rate trends
 - [ ] Late arrivals report
@@ -202,6 +211,10 @@ PATCH  /profil/update             - Update profile
 POST   /profil/daftar-wajah       - Register face (5 photos)
 POST   /absensi/cek-masuk         - Check-in (3 photos)
 GET    /absensi/riwayat           - Get attendance history
+GET    /admin/statistik           - Admin dashboard stats (requires admin role)
+GET    /admin/trend-kehadiran     - Attendance trend N days (requires admin role)
+GET    /admin/aktivitas-terbaru   - Recent activities (requires admin role)
+GET    /admin/daftar-karyawan     - List all employees (requires admin role)
 ```
 
 ### Environment Variables:
@@ -250,6 +263,57 @@ GET    /absensi/riwayat           - Get attendance history
 ---
 
 ## 📝 LOG PERUBAHAN TERAKHIR
+
+### Session: 17 Nov 2024 - UPDATE 3 (Backend API Admin Dashboard)
+
+#### ✅ Yang Baru Selesai:
+1. **Backend API Admin - COMPLETE** 🎯
+   - ✅ `/app/app/schemas/admin.py` - Schema response untuk admin endpoints
+   - ✅ `/app/app/api/admin.py` - API endpoints lengkap untuk admin dashboard
+   - ✅ `/app/app/main.py` - Admin router terdaftar
+
+2. **API Endpoints Admin yang Tersedia:**
+   - ✅ **GET /admin/statistik** - Statistik dashboard (total karyawan, hadir hari ini, belum absen, tingkat kehadiran %)
+   - ✅ **GET /admin/trend-kehadiran?hari=7** - Data trend kehadiran N hari terakhir untuk chart
+   - ✅ **GET /admin/aktivitas-terbaru?limit=5** - Recent activities dengan nama, aksi, waktu, status
+   - ✅ **GET /admin/daftar-karyawan** - Daftar lengkap semua karyawan
+
+3. **Schema Response Models:**
+   - ✅ `StatistikDashboard` - Stats untuk dashboard utama
+   - ✅ `TrendKehadiranResponse` & `TrendHarianItem` - Data untuk chart
+   - ✅ `AktivitasTerbaruResponse` & `AktivitasTerbaruItem` - Recent activities
+   - ✅ `DaftarKaryawanResponse` & `KaryawanItem` - List karyawan
+
+4. **Fitur Keamanan:**
+   - ✅ Admin role validation dengan dependency `get_current_admin()`
+   - ✅ Token verification dengan JWT
+   - ✅ Role detection: jabatan contains "admin" OR id_karyawan starts with "ADM"
+   - ✅ HTTP 403 Forbidden jika bukan admin
+
+5. **Optimasi Query:**
+   - ✅ Distinct count untuk menghindari duplikasi data absensi
+   - ✅ Efficient JOIN untuk aktivitas terbaru
+   - ✅ Date filtering dengan func.date() untuk akurasi per hari
+   - ✅ Query parameter validation (hari: 1-30, limit: 1-50)
+
+#### 📂 Files Created/Modified:
+```
+CREATED:
+- /app/app/schemas/admin.py (7 schema models untuk admin endpoints)
+- /app/app/api/admin.py (5 endpoints dengan admin validation)
+
+MODIFIED:
+- /app/app/main.py (Import & register admin router)
+- /app/docs/todos/CURRENT_TASK.md (Update progress Fase 2)
+```
+
+#### 🔄 Next Steps:
+1. **Frontend Integration** - Update API service untuk admin endpoints
+2. **Modernisasi AdminDashboardPage** - Stats cards, chart, recent activity
+3. **Install Dependencies** - Recharts untuk chart component
+4. **Styling** - Blue gradient background + Red accents
+
+---
 
 ### Session: 17 Nov 2024 - UPDATE 2 (Modernisasi Login Page)
 

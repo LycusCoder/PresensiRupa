@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.db.database import engine, Base
 from app.db.models import Pengguna, LogAbsensi  # Import models biar Base.metadata tahu
-from app.api import autentikasi, profil, absensi
+from app.api import autentikasi, profil, absensi, admin
 
 # Settings
 settings = get_settings()
@@ -31,6 +31,7 @@ app.add_middleware(
 app.include_router(autentikasi.router)
 app.include_router(profil.router)
 app.include_router(absensi.router)
+app.include_router(admin.router)
 
 
 @app.get("/")
