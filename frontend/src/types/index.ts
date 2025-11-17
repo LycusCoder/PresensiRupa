@@ -23,6 +23,8 @@ export interface TokenResponse {
 }
 
 // ========== USER TYPES ==========
+export type UserRole = 'admin' | 'karyawan'
+
 export interface Pengguna {
   id_pengguna: number
   nama_pengguna: string
@@ -36,13 +38,14 @@ export interface Pengguna {
   sudah_daftar_wajah: boolean
   status_kehadiran: string
   catatan_admin?: string
+  role?: UserRole // Tambahan untuk role detection
 }
 
 export interface UpdateProfilRequest {
   nama_depan?: string
   nama_belakang?: string
-  jabatan?: string
   alamat_surel?: string
+  catatan_admin?: string
 }
 
 // ========== ATTENDANCE TYPES ==========
@@ -54,16 +57,13 @@ export interface CheckInRequest {
 
 export interface CheckInResponse {
   status: string
-  jumlah_cocok: number
   pesan: string
-  waktu: string
 }
 
 export interface AttendanceRecord {
   tanggal: string
   jam: string
   status: string
-  tipe_kehadiran: string
 }
 
 // ========== API ERROR ==========

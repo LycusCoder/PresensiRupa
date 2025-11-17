@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '@/components/Sidebar'
 import Header from '@/components/Header'
 
-type Props = {
-  children: React.ReactNode
-}
-
-export function MainLayout({ children }: Props) {
+export function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [darkMode, setDarkMode] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -24,7 +20,6 @@ export function MainLayout({ children }: Props) {
     else if (path.startsWith('/riwayat')) setActivePage('riwayat-absensi')
     else if (path.startsWith('/profil')) setActivePage('profil-saya')
     else if (path.startsWith('/daftar-wajah')) setActivePage('daftar-wajah')
-    else if (path.startsWith('/pegawai')) setActivePage('pegawai')
     else setActivePage('')
   }, [location.pathname])
 
@@ -56,6 +51,7 @@ export function MainLayout({ children }: Props) {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         isMobile={isMobile}
+        mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         activePage={activePage}
         setActivePage={setActivePage}
@@ -74,7 +70,7 @@ export function MainLayout({ children }: Props) {
         />
 
         <main className="flex-1 overflow-auto p-6 pt-20">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>
