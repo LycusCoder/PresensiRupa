@@ -172,9 +172,9 @@ REM    Jika tidak cocok, akan ask permission untuk continue
 ### Startup Phase
 ```
 1. Start Backend (FastAPI)
-   └─ Port 8000
-   └─ http://localhost:8000
-   └─ API Docs: http://localhost:8000/docs
+   └─ Port 8001
+   └─ http://localhost:8001
+   └─ API Docs: http://localhost:8001/docs
    
 2. Wait 2-3 seconds
    
@@ -199,9 +199,9 @@ REM    Jika tidak cocok, akan ask permission untuk continue
 | Service | URL | Purpose |
 |---------|-----|---------|
 | **Frontend** | http://localhost:5173 | Main application |
-| **Backend API** | http://localhost:8000 | API server |
-| **API Docs (Swagger)** | http://localhost:8000/docs | Interactive API documentation |
-| **API Docs (ReDoc)** | http://localhost:8000/redoc | Alternative API documentation |
+| **Backend API** | http://localhost:8001 | API server |
+| **API Docs (Swagger)** | http://localhost:8001/docs | Interactive API documentation |
+| **API Docs (ReDoc)** | http://localhost:8001/redoc | Alternative API documentation |
 
 ---
 
@@ -287,12 +287,12 @@ Edit Frontend Files:
 
 ### 4. Troubleshooting Port Already in Use
 
-If port 8000 atau 5173 already in use:
+If port 8001 atau 5173 already in use:
 
 **macOS/Linux:**
 ```bash
-# Kill process on port 8000
-lsof -i :8000 | grep LISTEN | awk '{print $2}' | xargs kill -9
+# Kill process on port 8001
+lsof -i :8001 | grep LISTEN | awk '{print $2}' | xargs kill -9
 
 # Kill process on port 5173
 lsof -i :5173 | grep LISTEN | awk '{print $2}' | xargs kill -9
@@ -300,8 +300,8 @@ lsof -i :5173 | grep LISTEN | awk '{print $2}' | xargs kill -9
 
 **Windows:**
 ```cmd
-# Kill process on port 8000
-netstat -ano | findstr :8000
+# Kill process on port 8001
+netstat -ano | findstr :8001
 taskkill /PID <PID> /F
 
 # Kill process on port 5173
@@ -325,7 +325,7 @@ npm install
 
 ### Backend Starting
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
 INFO:     Started server process [PID]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete ✅
@@ -383,7 +383,7 @@ DEBUG=True
 
 ### Frontend .env.local
 ```
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8001
 ```
 
 ---
@@ -418,7 +418,7 @@ After scripts are running:
    └─ Fill all required fields
    
 4. Check Backend Logs
-   └─ http://localhost:8000/docs
+   └─ http://localhost:8001/docs
    └─ Try API endpoints directly
    
 5. Monitor Hot Reload
@@ -432,7 +432,7 @@ After scripts are running:
 
 While services are running:
 
-- **API Documentation**: http://localhost:8000/docs
+- **API Documentation**: http://localhost:8001/docs
 - **Frontend Code**: `frontend/src/`
 - **Backend Code**: `app/`
 - **Project Docs**: See `*.md` files in root directory
@@ -441,7 +441,7 @@ While services are running:
 
 ## ❓ FAQ
 
-**Q: Port 8000 atau 5173 sudah dipakai?**
+**Q: Port 8001 atau 5173 sudah dipakai?**
 A: Lihat "Troubleshooting Port Already in Use" section
 
 **Q: Virtual environment tidak activate?**

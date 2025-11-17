@@ -105,19 +105,19 @@ APP_VERSION=1.0.0
 
 ```bash
 # Development
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
 # Production (tanpa reload)
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001
 ```
 
-Server akan jalan di `http://localhost:8000`
+Server akan jalan di `http://localhost:8001`
 
 ### 4. Dokumentasi API
 
 FastAPI otomatis generate docs:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+- **Swagger UI**: http://localhost:8001/docs
+- **ReDoc**: http://localhost:8001/redoc
 
 ## 📡 API Endpoints
 
@@ -254,7 +254,7 @@ Lihat riwayat absensi user.
 ### 1. Daftar User
 
 ```bash
-curl -X POST "http://localhost:8000/autentikasi/daftar" \
+curl -X POST "http://localhost:8001/autentikasi/daftar" \
   -F "nama_pengguna=lycus" \
   -F "kata_sandi=password123" \
   -F "foto_ktp=@ktp.jpg"
@@ -263,7 +263,7 @@ curl -X POST "http://localhost:8000/autentikasi/daftar" \
 ### 2. Login
 
 ```bash
-curl -X POST "http://localhost:8000/autentikasi/masuk" \
+curl -X POST "http://localhost:8001/autentikasi/masuk" \
   -H "Content-Type: application/json" \
   -d '{
     "nama_pengguna": "lycus",
@@ -276,7 +276,7 @@ curl -X POST "http://localhost:8000/autentikasi/masuk" \
 ### 3. Daftar Wajah
 
 ```bash
-curl -X POST "http://localhost:8000/profil/daftar-wajah" \
+curl -X POST "http://localhost:8001/profil/daftar-wajah" \
   -H "Authorization: Bearer <TOKEN>" \
   -F "files=@foto1.jpg" \
   -F "files=@foto2.jpg" \
@@ -288,14 +288,14 @@ curl -X POST "http://localhost:8000/profil/daftar-wajah" \
 ### 4. Cek Profil
 
 ```bash
-curl -X GET "http://localhost:8000/profil/saya" \
+curl -X GET "http://localhost:8001/profil/saya" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
 ### 5. Absensi
 
 ```bash
-curl -X POST "http://localhost:8000/absensi/cek-masuk" \
+curl -X POST "http://localhost:8001/absensi/cek-masuk" \
   -H "Authorization: Bearer <TOKEN>" \
   -F "files=@foto1.jpg" \
   -F "files=@foto2.jpg" \
@@ -305,7 +305,7 @@ curl -X POST "http://localhost:8000/absensi/cek-masuk" \
 ### 6. Riwayat Absensi
 
 ```bash
-curl -X GET "http://localhost:8000/absensi/riwayat" \
+curl -X GET "http://localhost:8001/absensi/riwayat" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 

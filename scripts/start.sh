@@ -116,9 +116,9 @@ echo ""
 
 # Show startup info
 echo -e "${BLUE}📋 Services Starting:${NC}"
-echo -e "  🔵 Backend (FastAPI)  → http://localhost:8000"
+echo -e "  🔵 Backend (FastAPI)  → http://localhost:8001"
 echo -e "  🟢 Frontend (Vite)    → http://localhost:5173"
-echo -e "  📚 API Documentation  → http://localhost:8000/docs"
+echo -e "  📚 API Documentation  → http://localhost:8001/docs"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
 echo ""
@@ -127,7 +127,7 @@ echo ""
 
 # Start backend in background
 echo -e "${YELLOW}🔄 Starting Backend (FastAPI)...${NC}"
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001 &
 BACKEND_PID=$!
 echo -e "${GREEN}✅ Backend started (PID: $BACKEND_PID)${NC}"
 
@@ -151,7 +151,7 @@ echo -e "${GREEN}═════════════════════
 echo ""
 echo -e "${BLUE}🌐 Open your browser:${NC}"
 echo -e "  → Frontend: http://localhost:5173"
-echo -e "  → Backend API Docs: http://localhost:8000/docs"
+echo -e "  → Backend API Docs: http://localhost:8001/docs"
 echo ""
 
 # Function to cleanup on exit

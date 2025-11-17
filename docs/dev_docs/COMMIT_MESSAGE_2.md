@@ -64,7 +64,7 @@ Complete frontend implementation with:
 ### 5. API Integration
 - **Axios** HTTP client with interceptors
 - **Environment-aware** API URL:
-  - Dev: http://localhost:8000 (direct)
+  - Dev: http://localhost:8001 (direct)
   - Prod: /api (proxied through backend)
   
 - **Auto JWT** headers on all requests
@@ -108,7 +108,7 @@ Complete frontend implementation with:
 - **vite.config.ts**:
   - React plugin enabled
   - Path alias @ → ./src
-  - Dev proxy: /api → localhost:8000
+  - Dev proxy: /api → localhost:8001
   
 - **tsconfig.json**:
   - ES2020 target, ESNext modules
@@ -121,7 +121,7 @@ Complete frontend implementation with:
   - Font configuration
   
 - **.env** & **.env.production**:
-  - Development: localhost:8000
+  - Development: localhost:8001
   - Production: /api proxy
   
 - **package.json**:
@@ -224,7 +224,7 @@ frontend/
 
 # Open browser
 Frontend:  http://localhost:5173
-Backend:   http://localhost:8000/docs
+Backend:   http://localhost:8001/docs
 
 # Try login
 Username: test_user

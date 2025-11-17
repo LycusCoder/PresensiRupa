@@ -14,9 +14,10 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Get script directory
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
+# Get the script's directory, resolve the project root, and set it as current location
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
 
 # Welcome message
 clear
@@ -33,7 +34,16 @@ cat << "EOF"
 EOF
 echo -e "${NC}"
 
-echo -e "${BLUE}📍 Project Location: $SCRIPT_DIR${NC}"
+echo -e "${BLUE}📍 Project Location: $PROJECT_ROOT${NC}"
+echo ""
+
+# --- Environment Setup ---
+if [ -f ".env.development" ]; then
+    cp .env.development .env
+    echo -e "${GREEN}✅ Development environment (.env.development) loaded.${NC}"
+else
+    echo -e "${YELLOW}⚠️ .env.development not found. Using default settings.${NC}"
+fi
 echo ""
 
 # Check if venv already exists
@@ -81,55 +91,28 @@ else
     source venv/bin/activate
 fi
 
-# Check and install pip dependencies
-echo -e "${YELLOW}Checking pip dependencies...${NC}"
-if python -c "import fastapi" 2>/dev/null; then
-    echo -e "${GREEN}✅ FastAPI found${NC}"
-else
-    echo -e "${YELLOW}Installing Python dependencies from requirements.txt...${NC}"
-    pip install -r requirements.txt > /dev/null 2>&1
-    echo -e "${GREEN}✅ Python dependencies installed${NC}"
-fi
+# --- Dependency Checks ---
+echo -e "${YELLOW}Checking dependencies...${NC}"
+pip install -r requirements.txt --quiet
+echo -e "${GREEN}✅ Python dependencies are up to date.${NC}"
 
-# Check npm packages
-echo -e "${YELLOW}Checking npm dependencies...${NC}"
 if [ ! -d "frontend/node_modules" ]; then
     echo -e "${YELLOW}Installing frontend dependencies (this may take a moment)...${NC}"
-    cd frontend
-    if npm install; then
-        cd ..
-        echo -e "${GREEN}✅ Frontend dependencies installed${NC}"
-    else
-        cd ..
-        echo -e "${RED}❌ npm install failed!${NC}"
-        echo -e "${YELLOW}Troubleshooting:${NC}"
-        echo "  1. Check npm is installed: npm --version"
-        echo "  2. Check Node.js version: node --version"
-        echo "  3. Try again: rm -rf frontend/node_modules && ./dev.sh"
-        exit 1
-    fi
+    (cd frontend && npm install --quiet)
+    echo -e "${GREEN}✅ Frontend dependencies installed${NC}"
 else
     echo -e "${GREEN}✅ Frontend dependencies found${NC}"
 fi
-
 echo -e "${GREEN}✅ All dependencies ready${NC}"
 echo ""
 
-# Show info
+# --- Log Setup ---
+mkdir -p logs
+
+# --- Start Services ---
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}SERVICES STARTING:${NC}"
+echo -e "${GREEN}SERVICES STARTING IN BACKGROUND:${NC}"
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
-echo -e "  ${CYAN}Backend:${NC}  FastAPI on port 8000"
-echo -e "             → http://localhost:8000"
-echo -e "             → http://localhost:8000/docs (API Documentation)"
-echo ""
-echo -e "  ${CYAN}Frontend:${NC} Vite React on port 5173"
-echo -e "             → http://localhost:5173"
-echo ""
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
-echo -e "${YELLOW}⏱️  Starting services... (Press Ctrl+C to stop)${NC}"
 echo ""
 
 # Function for cleanup
@@ -147,30 +130,31 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Create named pipes for output (optional, for nice formatting)
-echo -e "${BLUE}┌─ Backend (PID $BASHPID)${NC}"
-echo -e "${BLUE}├─ Frontend${NC}"
-echo -e "${BLUE}└─────────────────────────────────────────────────────────────${NC}"
-echo ""
-
 # Start backend
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 2>&1 &
+echo -e "🔄 Starting Backend... Log available at logs/backend.log"
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001 > logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
 sleep 2
 
 # Start frontend
-(cd frontend && npm run dev) 2>&1 &
+echo -e "🔄 Starting Frontend... Log available at logs/frontend.log"
+(cd frontend && npm run dev) > logs/frontend.log 2>&1 &
 FRONTEND_PID=$!
 
-echo -e "${GREEN}✅ Backend process started (PID: $BACKEND_PID)${NC}"
-echo -e "${GREEN}✅ Frontend process started (PID: $FRONTEND_PID)${NC}"
+echo ""
+echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}✅ Backend and Frontend are running in the background.${NC}"
+echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "${CYAN}💡 Tips:${NC}"
-echo -e "   • Edit Python files to auto-reload backend"
-echo -e "   • Edit React files to auto-reload frontend"
-echo -e "   • Use Ctrl+C to stop all services gracefully"
+echo -e "   • Monitor logs: tail -f logs/backend.log"
+echo -e "   • Use Ctrl+C in this terminal to stop all services gracefully."
+echo ""
+echo -e "Open your browser at:"
+echo -e "  → Frontend: http://localhost:5173"
+echo -e "  → Backend API Docs: http://localhost:8001/docs"
 echo ""
 
-# Wait for child processes
+# Wait for child processes to be stopped
 wait

@@ -107,9 +107,9 @@ echo ═════════════════════════
 echo SERVICES STARTING:
 echo ════════════════════════════════════════════════════════════════
 echo.
-echo   Backend:  FastAPI on port 8000
-echo            ^ http://localhost:8000
-echo            ^ http://localhost:8000/docs (API Documentation)
+echo   Backend:  FastAPI on port 8001
+echo            ^ http://localhost:8001
+echo            ^ http://localhost:8001/docs (API Documentation)
 echo.
 echo   Frontend: Vite React on port 5173
 echo            ^ http://localhost:5173
@@ -121,7 +121,7 @@ echo.
 
 REM Start both services
 echo 🔄 Starting Backend...
-start "Backend - PresensiRupa" cmd /k "python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+start "Backend - PresensiRupa" cmd /k "python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001"
 
 REM Wait for backend
 timeout /t 3 /nobreak
@@ -143,6 +143,6 @@ echo    • Close the windows or press Ctrl+C to stop services
 echo.
 echo Open your browser at:
 echo   → Frontend: http://localhost:5173
-echo   → Backend API Docs: http://localhost:8000/docs
+echo   → Backend API Docs: http://localhost:8001/docs
 echo.
 pause

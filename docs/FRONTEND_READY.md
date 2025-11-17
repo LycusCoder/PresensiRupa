@@ -385,7 +385,7 @@ npm run dev
 # http://localhost:5173
 ```
 
-Backend sudah running di `http://localhost:8000`
+Backend sudah running di `http://localhost:8001`
 Frontend akan run di `http://localhost:5173`
 
 ## 📞 Need Help?

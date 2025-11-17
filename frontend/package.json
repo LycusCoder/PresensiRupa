@@ -6,7 +6,7 @@
   "description": "Professional React TypeScript Frontend untuk PresensiRupa Smart Attendance System",
   "author": "Lycus",
   "scripts": {
-    "dev": "vite",
+    "dev": "cross-env NO_COLOR=1 vite --port 5173 --strictPort",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
@@ -39,6 +39,7 @@
     "@typescript-eslint/parser": "^7.16.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "postcss": "^8.4.39",

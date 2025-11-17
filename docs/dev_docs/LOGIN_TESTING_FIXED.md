@@ -146,7 +146,7 @@ alice_chen / alice123
 6. **Logout functionality** (Click "Keluar", should redirect to /masuk)
 
 ### Backend Tests (via Swagger UI)
-1. Open: http://localhost:8000/docs
+1. Open: http://localhost:8001/docs
 2. Test POST /autentikasi/masuk endpoint
 3. Test GET /profil/saya endpoint (with token)
 

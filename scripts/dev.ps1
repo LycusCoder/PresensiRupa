@@ -13,12 +13,25 @@ Write-Host "║                                                                 
 Write-Host "╚══════════════════════════════════════════════════════════════════╝"
 Write-Host ""
 
-$ScriptDir = $PSScriptRoot
-Write-Host "📍 Project Location: $ScriptDir"
+# Project root is the current directory, where this script is expected to be run from.
+# All paths are relative to this location.
+Write-Host "📍 Project Location: (Current Directory)"
 Write-Host ""
 
+# --- Environment Setup ---
+$DevEnvFile = ".env.development"
+$TargetEnvFile = ".env"
+if (Test-Path $DevEnvFile) {
+    Copy-Item -Path $DevEnvFile -Destination $TargetEnvFile -Force
+    Write-Host "✅ Development environment (.env.development) loaded."
+} else {
+    Write-Host "⚠️ .env.development not found. Using default settings." -ForegroundColor Yellow
+}
+Write-Host ""
+
+
 # --- Virtual Environment Setup ---
-$VenvPath = Join-Path $ScriptDir ".venv"
+$VenvPath = ".venv"
 
 if (Test-Path $VenvPath) {
     Write-Host "✅ Virtual environment found!"
@@ -67,22 +80,17 @@ if (Test-Path $activateScript) {
 # --- Dependency Checks ---
 # Check pip dependencies
 Write-Host "Checking pip dependencies..."
-$fastapiCheck = Get-Command fastapi -ErrorAction SilentlyContinue
-if (-not $fastapiCheck) {
-    Write-Host "Installing Python dependencies..."
-    pip install -r requirements.txt | Out-Null
-    Write-Host "✅ Python dependencies installed"
-} else {
-    Write-Host "✅ Python dependencies found"
-}
+pip install -r requirements.txt --quiet
+Write-Host "✅ Python dependencies are up to date."
+
 
 # Check npm dependencies
 Write-Host "Checking npm dependencies..."
-$nodeModulesPath = Join-Path $ScriptDir "frontend\node_modules"
+$nodeModulesPath = "frontend\node_modules"
 if (-not (Test-Path $nodeModulesPath)) {
     Write-Host "Installing frontend dependencies (this may take a moment)..."
-    Push-Location (Join-Path $ScriptDir "frontend")
-    npm install
+    Push-Location "frontend"
+npm install --quiet
     Pop-Location
     Write-Host "✅ Frontend dependencies installed"
 } else {
@@ -92,45 +100,48 @@ if (-not (Test-Path $nodeModulesPath)) {
 Write-Host "✅ All dependencies ready"
 Write-Host ""
 
+# --- Log Setup ---
+$LogDir = "logs"
+if (-not (Test-Path $LogDir)) {
+    New-Item -Path $LogDir -ItemType Directory | Out-Null
+}
+
 # --- Start Services ---
 Write-Host "════════════════════════════════════════════════════════════════"
-Write-Host "SERVICES STARTING:"
+Write-Host "SERVICES STARTING IN BACKGROUND:"
 Write-Host "════════════════════════════════════════════════════════════════"
-Write-Host ""
-Write-Host "  Backend:  FastAPI on port 8000"
-Write-Host "            - http://localhost:8000"
-Write-Host "            - http://localhost:8000/docs (API Documentation)"
-Write-Host ""
-Write-Host "  Frontend: Vite React on port 5173"
-Write-Host "            - http://localhost:5173"
-Write-Host ""
-Write-Host "════════════════════════════════════════════════════════════════"
-Write-Host ""
-Write-Host "⏱️  Services starting... (Press Ctrl+C in the new windows to stop)"
 Write-Host ""
 
 # Start Backend
-Write-Host "🔄 Starting Backend..."
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "& .\.venv\Scripts\activate.ps1; uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+$BackendLog = Join-Path $LogDir "backend.log"
+Write-Host "🔄 Starting Backend... Log available at logs\backend.log"
+$PythonwPath = Join-Path $VenvPath "Scripts\pythonw.exe"
+if (-not (Test-Path $PythonwPath)) {
+    Write-Host "⚠️ pythonw.exe not found, falling back to python.exe" -ForegroundColor Yellow
+    $PythonwPath = Join-Path $VenvPath "Scripts\python.exe"
+}
+$BackendCommand = "-m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001 --no-use-colors"
+Start-Process -FilePath $PythonwPath -ArgumentList $BackendCommand -RedirectStandardOutput $BackendLog -NoNewWindow
 
 # Wait a bit
 Start-Sleep -Seconds 3
 
 # Start Frontend
-Write-Host "🔄 Starting Frontend..."
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd frontend; npm run dev"
+$FrontendLog = Join-Path $LogDir "frontend.log"
+Write-Host "🔄 Starting Frontend... Log available at logs\frontend.log"
+$FrontendDir = "frontend"
+Start-Process -FilePath "npm.cmd" -ArgumentList "run", "dev" -WorkingDirectory $FrontendDir -RedirectStandardOutput $FrontendLog -NoNewWindow
 
 Write-Host ""
 Write-Host "════════════════════════════════════════════════════════════════"
-Write-Host "✅ Backend and Frontend are running in new windows!"
+Write-Host "✅ Backend and Frontend are running in the background."
 Write-Host "════════════════════════════════════════════════════════════════"
 Write-Host ""
 Write-Host "💡 Tips:"
-Write-Host "   • Edit Python files to auto-reload backend"
-Write-Host "   • Edit React files to auto-reload frontend"
-Write-Host "   • Close the new windows or press Ctrl+C in them to stop services"
+Write-Host "   • Monitor logs: Get-Content logs\backend.log -Wait -Tail 10"
+Write-Host "   • To stop all services, run the 'scripts\kill.ps1' script."
 Write-Host ""
 Write-Host "Open your browser at:"
 Write-Host "  → Frontend: http://localhost:5173"
-Write-Host "  → Backend API Docs: http://localhost:8000/docs"
+Write-Host "  → Backend API Docs: http://localhost:8001/docs"
 Write-Host ""

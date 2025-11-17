@@ -44,7 +44,7 @@ dev.bat          # Windows
 
 # Then open browser
 Frontend:  http://localhost:5173
-Backend:   http://localhost:8000/docs
+Backend:   http://localhost:8001/docs
 ```
 
 ## ✅ Quick Test Cases
@@ -93,7 +93,7 @@ Backend:   http://localhost:8000/docs
 ## 🔌 API Test (via Swagger)
 
 ```
-1. Open http://localhost:8000/docs
+1. Open http://localhost:8001/docs
 
 2. Test Login:
    - Find: POST /autentikasi/masuk
@@ -112,7 +112,7 @@ Backend:   http://localhost:8000/docs
 | Issue | Solution |
 |-------|----------|
 | "Cannot GET /" | Frontend not running on 5173 |
-| Login doesn't work | Backend not running on 8000 |
+| Login doesn't work | Backend not running on 8001 |
 | Invalid token | Token expired (8 hours), re-login |
 | 401 Unauthorized | Token missing/expired, re-login |
 | "Username not found" | Use correct username (case-sensitive) |

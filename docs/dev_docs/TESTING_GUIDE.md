@@ -58,7 +58,7 @@ Format: username / password
 dev.bat              # Windows
 
 # Tunggu sampai kedua service ready:
-# ✅ Backend: http://localhost:8000
+# ✅ Backend: http://localhost:8001
 # ✅ Frontend: http://localhost:5173
 ```
 
@@ -66,7 +66,7 @@ dev.bat              # Windows
 
 ```
 Frontend:  http://localhost:5173
-Backend:   http://localhost:8000/docs
+Backend:   http://localhost:8001/docs
 ```
 
 ---
@@ -155,7 +155,7 @@ Expected:
 #### Test 2.1: API Dokumentasi ✓
 ```
 Steps:
-1. Buka http://localhost:8000/docs
+1. Buka http://localhost:8001/docs
 2. Lihatlah interactive API documentation (Swagger UI)
 
 Expected:
@@ -167,7 +167,7 @@ Expected:
 #### Test 2.2: Login via API ✓
 ```
 Steps:
-1. Buka http://localhost:8000/docs
+1. Buka http://localhost:8001/docs
 2. Cari endpoint: POST /autentikasi/masuk
 3. Klik "Try it out"
 4. Input request body:
@@ -386,9 +386,9 @@ Will test:
 ### Problem: Login tidak berhasil
 
 **Solusi**:
-1. Check apakah backend running di port 8000
+1. Check apakah backend running di port 8001
    ```bash
-   curl http://localhost:8000/docs
+   curl http://localhost:8001/docs
    ```
 
 2. Check console di browser (F12) untuk error message
@@ -517,7 +517,7 @@ Ctrl+C
 python insert_test_accounts.py
 
 # View API docs
-http://localhost:8000/docs
+http://localhost:8001/docs
 
 # Frontend
 http://localhost:5173

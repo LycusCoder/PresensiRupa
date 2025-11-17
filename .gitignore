@@ -48,6 +48,7 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+GEMINI.md 
 
 # Translations
 *.mo
@@ -142,3 +143,7 @@ Thumbs.db
 presensi_rupa.db
 temp/
 uploads/
+logs/
+
+# Agents
+.continue/

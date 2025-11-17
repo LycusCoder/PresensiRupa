@@ -17,9 +17,9 @@ Backend Implementation
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │ FastAPI Server                          ✅ READY
-│ │  • Port: 8000
+│ │  • Port: 8001
 │ │  • CORS enabled
-│ │  • Swagger UI: http://localhost:8000/docs
+│ │  • Swagger UI: http://localhost:8001/docs
 │ │  • Status: RUNNING ✓
 │ │
 │ Database Layer (SQLAlchemy ORM)         ✅ READY
@@ -255,7 +255,7 @@ TOTAL: 46 files created | 4000+ lines of code | 200+ KB
 🚀 DEPLOYMENT STATUS
 
 Current Environment
-├── Backend Server: ✅ RUNNING on http://localhost:8000
+├── Backend Server: ✅ RUNNING on http://localhost:8001
 ├── Frontend Dev: ✅ READY (start with: npm run dev)
 ├── Database: ✅ SQLite configured (presensi_rupa.db)
 ├── Environment: ✅ .env configured
@@ -287,7 +287,7 @@ Current Setup (Local Development)
 ┌──────────────┐                    ┌──────────────┐
 │              │                    │              │
 │  Backend     │◄──────API────────►│   Frontend    │
-│  Port 8000   │      http://        │  Port 5173   │
+│  Port 8001   │      http://        │  Port 5173   │
 │  (FastAPI)   │     localhost       │   (Vite)     │
 │              │                    │              │
 └──────────────┘                    └──────────────┘
@@ -301,13 +301,13 @@ To start both servers:
 Terminal 1 - Backend
 $ cd presensi_rupa
 $ source venv/bin/activate
-$ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+$ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
 Terminal 2 - Frontend
 $ cd presensi_rupa/frontend
 $ npm run dev
 
-Then open: http://localhost:5173 (frontend will proxy API to localhost:8000)
+Then open: http://localhost:5173 (frontend will proxy API to localhost:8001)
 
 ═══════════════════════════════════════════════════════════════════════════════
 

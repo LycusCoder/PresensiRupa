@@ -69,7 +69,7 @@ foto_ktp:        [file]               (opsional, untuk OCR auto-ekstrak NIK)
 #### cURL Example:
 
 ```bash
-curl -X POST "http://localhost:8000/autentikasi/daftar" \
+curl -X POST "http://localhost:8001/autentikasi/daftar" \
   -F "nama_pengguna=lycus" \
   -F "kata_sandi=password123" \
   -F "nama_depan=Lycus" \
@@ -120,7 +120,7 @@ Masuk ke sistem dan dapatkan access token untuk akses endpoint lainnya.
 #### cURL Example:
 
 ```bash
-curl -X POST "http://localhost:8000/autentikasi/masuk" \
+curl -X POST "http://localhost:8001/autentikasi/masuk" \
   -H "Content-Type: application/json" \
   -d '{
     "nama_pengguna": "lycus",
@@ -181,7 +181,7 @@ files: [foto1.jpg, foto2.jpg, foto3.jpg, foto4.jpg, foto5.jpg]
 #### cURL Example:
 
 ```bash
-curl -X POST "http://localhost:8000/profil/daftar-wajah" \
+curl -X POST "http://localhost:8001/profil/daftar-wajah" \
   -H "Authorization: Bearer <TOKEN>" \
   -F "files=@foto1.jpg" \
   -F "files=@foto2.jpg" \
@@ -225,7 +225,7 @@ Authorization: Bearer <TOKEN>
 #### cURL Example:
 
 ```bash
-curl -X GET "http://localhost:8000/profil/saya" \
+curl -X GET "http://localhost:8001/profil/saya" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -275,7 +275,7 @@ Semua field di atas **opsional**. Hanya kirim field yang mau di-update.
 #### cURL Example:
 
 ```bash
-curl -X PATCH "http://localhost:8000/profil/update" \
+curl -X PATCH "http://localhost:8001/profil/update" \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -351,7 +351,7 @@ files: [foto_1.jpg, foto_2.jpg, foto_3.jpg]
 #### cURL Example:
 
 ```bash
-curl -X POST "http://localhost:8000/absensi/cek-masuk" \
+curl -X POST "http://localhost:8001/absensi/cek-masuk" \
   -H "Authorization: Bearer <TOKEN>" \
   -F "files=@foto_1.jpg" \
   -F "files=@foto_2.jpg" \
@@ -397,7 +397,7 @@ Authorization: Bearer <TOKEN>
 #### cURL Example:
 
 ```bash
-curl -X GET "http://localhost:8000/absensi/riwayat" \
+curl -X GET "http://localhost:8001/absensi/riwayat" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
@@ -408,7 +408,7 @@ curl -X GET "http://localhost:8000/absensi/riwayat" \
 ### Step 1: Daftar User
 
 ```bash
-TOKEN_RESPONSE=$(curl -s -X POST "http://localhost:8000/autentikasi/daftar" \
+TOKEN_RESPONSE=$(curl -s -X POST "http://localhost:8001/autentikasi/daftar" \
   -F "nama_pengguna=lycus" \
   -F "kata_sandi=password123" \
   -F "nama_depan=Lycus" \
@@ -424,7 +424,7 @@ echo $TOKEN_RESPONSE
 ### Step 2: Login
 
 ```bash
-LOGIN_RESPONSE=$(curl -s -X POST "http://localhost:8000/autentikasi/masuk" \
+LOGIN_RESPONSE=$(curl -s -X POST "http://localhost:8001/autentikasi/masuk" \
   -H "Content-Type: application/json" \
   -d '{
     "nama_pengguna": "lycus",
@@ -438,7 +438,7 @@ echo "Token: $TOKEN"
 ### Step 3: Daftar Wajah
 
 ```bash
-curl -s -X POST "http://localhost:8000/profil/daftar-wajah" \
+curl -s -X POST "http://localhost:8001/profil/daftar-wajah" \
   -H "Authorization: Bearer $TOKEN" \
   -F "files=@foto1.jpg" \
   -F "files=@foto2.jpg" \
@@ -450,14 +450,14 @@ curl -s -X POST "http://localhost:8000/profil/daftar-wajah" \
 ### Step 4: Lihat Profil
 
 ```bash
-curl -s -X GET "http://localhost:8000/profil/saya" \
+curl -s -X GET "http://localhost:8001/profil/saya" \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
 
 ### Step 5: Absensi
 
 ```bash
-curl -s -X POST "http://localhost:8000/absensi/cek-masuk" \
+curl -s -X POST "http://localhost:8001/absensi/cek-masuk" \
   -H "Authorization: Bearer $TOKEN" \
   -F "files=@foto_1.jpg" \
   -F "files=@foto_2.jpg" \
@@ -467,7 +467,7 @@ curl -s -X POST "http://localhost:8000/absensi/cek-masuk" \
 ### Step 6: Lihat Riwayat
 
 ```bash
-curl -s -X GET "http://localhost:8000/absensi/riwayat" \
+curl -s -X GET "http://localhost:8001/absensi/riwayat" \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
 

@@ -112,9 +112,9 @@ echo.
 
 REM Show startup info
 echo 📋 Services Starting:
-echo   🔵 Backend (FastAPI)  = http://localhost:8000
+echo   🔵 Backend (FastAPI)  = http://localhost:8001
 echo   🟢 Frontend (Vite)    = http://localhost:5173
-echo   📚 API Documentation  = http://localhost:8000/docs
+echo   📚 API Documentation  = http://localhost:8001/docs
 echo.
 echo Press Ctrl+C to stop all services
 echo.
@@ -123,7 +123,7 @@ echo.
 
 REM Start backend in separate window
 echo 🔄 Starting Backend (FastAPI)...
-start "PresensiRupa Backend" cmd /k "python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+start "PresensiRupa Backend" cmd /k "python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001"
 echo ✅ Backend started in new window
 
 REM Wait a bit for backend to start
@@ -143,7 +143,7 @@ echo ═════════════════════════
 echo.
 echo 🌐 Open your browser:
 echo   → Frontend: http://localhost:5173
-echo   → Backend API Docs: http://localhost:8000/docs
+echo   → Backend API Docs: http://localhost:8001/docs
 echo.
 echo Close this window or press any key when done...
 pause

@@ -76,7 +76,7 @@ frontend/
 │   └── types/
 │       └── index.ts ................... TypeScript interfaces (17+)
 │
-├── .env ............................. Dev config (localhost:8000)
+├── .env ............................. Dev config (localhost:8001)
 ├── .env.production .................. Prod config (/api proxy)
 ├── .env.example ..................... Template for team
 ├── .gitignore ........................ Ignores .env files

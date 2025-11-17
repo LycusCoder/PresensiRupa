@@ -99,12 +99,12 @@ APP_VERSION=1.0.0
 
 ```bash
 # Development mode (with auto-reload)
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 Output yang diharapkan:
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Uvicorn running on http://0.0.0.0:8001
 INFO:     Application startup complete
 ```
 
@@ -116,17 +116,17 @@ Buka di browser atau terminal:
 
 ### Swagger UI (Interactive API Docs)
 ```
-http://localhost:8000/docs
+http://localhost:8001/docs
 ```
 
 ### ReDoc (API Reference)
 ```
-http://localhost:8000/redoc
+http://localhost:8001/redoc
 ```
 
 ### Health Check
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8001/health
 ```
 
 ---
@@ -136,7 +136,7 @@ curl http://localhost:8000/health
 ### 1. Register User
 
 ```bash
-curl -X POST "http://localhost:8000/autentikasi/daftar" \
+curl -X POST "http://localhost:8001/autentikasi/daftar" \
   -F "nama_pengguna=test_user" \
   -F "kata_sandi=password123" \
   -F "nama_depan=Test" \
@@ -166,7 +166,7 @@ Response:
 ### 2. Login
 
 ```bash
-curl -X POST "http://localhost:8000/autentikasi/masuk" \
+curl -X POST "http://localhost:8001/autentikasi/masuk" \
   -H "Content-Type: application/json" \
   -d '{
     "nama_pengguna": "test_user",
@@ -189,7 +189,7 @@ Response:
 ```bash
 TOKEN="<paste-token-dari-response-login>"
 
-curl -X GET "http://localhost:8000/profil/saya" \
+curl -X GET "http://localhost:8001/profil/saya" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -309,19 +309,19 @@ Solusi: Login ulang (`POST /autentikasi/masuk`)
 python -m uvicorn app.main:app --reload --port 9000
 
 # Run tanpa reload (production)
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001
 
 # Run dengan worker count (production)
-python -m uvicorn app.main:app --workers 4 --port 8000
+python -m uvicorn app.main:app --workers 4 --port 8001
 
 # Check if server running
-curl http://localhost:8000/health
+curl http://localhost:8001/health
 
 # View all endpoints
-curl http://localhost:8000/openapi.json | jq
+curl http://localhost:8001/openapi.json | jq
 
-# Kill process di port 8000
-lsof -ti:8000 | xargs kill -9
+# Kill process di port 8001
+lsof -ti:8001 | xargs kill -9
 ```
 
 ---

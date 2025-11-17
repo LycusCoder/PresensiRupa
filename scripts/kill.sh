@@ -1,58 +1,38 @@
 #!/bin/bash
+#
+# PresensiRupa - Stop All Development Services
+#
+# This script finds and kills processes running on specified ports
+# to ensure a clean shutdown of the development environment.
 
-# Kill script untuk menghentikan semua services (backend + frontend)
-# Usage: ./kill.sh
+# --- Configuration ---
+PORTS=(8001 5173) # Backend and Frontend ports
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 
-set -e
-
-echo "╔════════════════════════════════════════════════════════════════════╗"
-echo "║                                                                    ║"
-echo "║           🛑 Stopping PresensiRupa Services 🛑                    ║"
-echo "║                                                                    ║"
-echo "╚════════════════════════════════════════════════════════════════════╝"
+echo -e "${YELLOW}Stopping all development services for PresensiRupa...${NC}"
 echo ""
 
-# Kill uvicorn processes (backend)
-if pgrep -f "uvicorn.*main.py" > /dev/null; then
-    echo "⏹️  Stopping Backend (uvicorn)..."
-    pkill -f "uvicorn.*main.py" || true
-    sleep 1
-    echo "✅ Backend stopped"
-else
-    echo "ℹ️  Backend tidak berjalan"
-fi
+for port in "${PORTS[@]}"; do
+    echo -e "${CYAN}Searching for service on port $port...${NC}"
+    
+    # Use lsof to find the PID listening on the port.
+    # The -t flag outputs only the PID.
+    # Redirect stderr to /dev/null to hide "lsof: status error" if no process is found.
+    PID=$(lsof -t -i:$port 2>/dev/null)
+    
+    if [ -n "$PID" ]; then
+        echo -e "Found service with PID ${GREEN}$PID${NC} on port $port. Stopping..."
+        # Kill the process forcefully.
+        kill -9 $PID
+        echo -e "${GREEN}✅ Service on port $port stopped.${NC}"
+    else
+        echo -e "ℹ️ No service found running on port $port."
+    fi
+    echo ""
+done
 
-# Kill vite processes (frontend)
-if pgrep -f "vite" > /dev/null; then
-    echo "⏹️  Stopping Frontend (vite)..."
-    pkill -f "vite" || true
-    sleep 1
-    echo "✅ Frontend stopped"
-else
-    echo "ℹ️  Frontend tidak berjalan"
-fi
-
-# Kill node processes (fallback untuk npm)
-if pgrep -f "node.*vite" > /dev/null; then
-    echo "⏹️  Stopping Node (npm vite)..."
-    pkill -f "node.*vite" || true
-    sleep 1
-    echo "✅ Node stopped"
-fi
-
-# Kill Python processes (fallback)
-if pgrep -f "python.*main.py" > /dev/null; then
-    echo "⏹️  Stopping Python processes..."
-    pkill -f "python.*main.py" || true
-    sleep 1
-    echo "✅ Python stopped"
-fi
-
-echo ""
-echo "════════════════════════════════════════════════════════════════════"
-echo "✅ All services stopped successfully!"
-echo "════════════════════════════════════════════════════════════════════"
-echo ""
-echo "🚀 Untuk memulai kembali, jalankan:"
-echo "   ./dev.sh"
-echo ""
+echo -e "${GREEN}All services have been stopped.${NC}"

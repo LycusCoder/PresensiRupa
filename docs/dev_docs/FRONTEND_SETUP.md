@@ -74,7 +74,7 @@ npm install
 ```bash
 # Create .env.local file
 cat > .env.local << 'EOF'
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8001
 EOF
 ```
 
@@ -229,7 +229,7 @@ Semua routes kecuali `/masuk` dan `/daftar` memerlukan valid token.
 ### API Client Setup
 
 Axios instance dengan:
-- Base URL: `http://localhost:8000`
+- Base URL: `http://localhost:8001`
 - Auto Bearer token injection
 - Error interceptor (401 → logout)
 - Type-safe requests
@@ -419,14 +419,14 @@ if (error.response?.status === 401) {
 
 ### Vite Proxy
 
-Untuk local development dengan backend di port 8000:
+Untuk local development dengan backend di port 8001:
 
 ```ts
 // vite.config.ts
 server: {
   proxy: {
     '/api': {
-      target: 'http://localhost:8000',
+      target: 'http://localhost:8001',
       changeOrigin: true,
       rewrite: (path) => path.replace(/^\/api/, ''),
     }

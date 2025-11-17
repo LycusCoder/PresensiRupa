@@ -191,13 +191,13 @@ pip install -r requirements.txt
 
 ### Run
 ```bash
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 ### Test
-- ✅ FastAPI Swagger UI: http://localhost:8000/docs
-- ✅ ReDoc: http://localhost:8000/redoc
-- ✅ Health check: http://localhost:8000/health
+- ✅ FastAPI Swagger UI: http://localhost:8001/docs
+- ✅ ReDoc: http://localhost:8001/redoc
+- ✅ Health check: http://localhost:8001/health
 
 ---
 
@@ -241,7 +241,7 @@ Sekarang backend sudah 100% ready. Next steps:
    - Error handling
 
 3. **Testing di Laptop Demo**
-   - Backend jalan di localhost:8000
+   - Backend jalan di localhost:8001
    - Frontend jalan di localhost:3000
    - HP temen akses via local network IP (192.168.x.x:3000)
 

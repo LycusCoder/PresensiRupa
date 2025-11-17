@@ -16,12 +16,12 @@ Uncaught ReferenceError: process is not defined
 ### 1. Changed api.ts to use Vite's environment system
 **Before** (❌ Wrong for Vite):
 ```typescript
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:8001'
 ```
 
 **After** (✅ Correct for Vite):
 ```typescript
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001'
 ```
 
 ### 2. Created Type Definition File
@@ -44,7 +44,7 @@ This tells TypeScript about `import.meta.env` so there are no type errors.
 
 #### Development (`.env`)
 ```bash
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8001
 ```
 Used when running `npm run dev` locally.
 
@@ -56,7 +56,7 @@ Used when running `npm run build` for production. The `/api` route will be proxi
 
 #### Example (`.env.example`)
 ```bash
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8001
 ```
 Template for team members to know what variables are needed.
 
@@ -79,7 +79,7 @@ dist/
 When you run `npm run dev`:
 1. Vite loads `.env` file
 2. Vite replaces `import.meta.env.VITE_API_URL` at build time
-3. Browser receives: `http://localhost:8000`
+3. Browser receives: `http://localhost:8001`
 
 ### Production
 When you run `npm run build`:
@@ -98,7 +98,7 @@ When you run `npm run build`:
 
 | Environment | API_URL | Usage |
 |------------|---------|-------|
-| Local Development | `http://localhost:8000` | Direct backend calls |
+| Local Development | `http://localhost:8001` | Direct backend calls |
 | Production | `/api` | Proxied requests |
 
 **Proxy in Vite Config** (`vite.config.ts`):
@@ -106,7 +106,7 @@ When you run `npm run build`:
 server: {
   proxy: {
     '/api': {
-      target: 'http://localhost:8000',
+      target: 'http://localhost:8001',
       changeOrigin: true,
       rewrite: (pathStr) => pathStr.replace(/^\/api/, ''),
     },
@@ -122,7 +122,7 @@ server: {
 ```bash
 npm run dev
 # Should see: "Local: http://localhost:5173"
-# Should connect to "http://localhost:8000" for API
+# Should connect to "http://localhost:8001" for API
 ```
 
 ### Test 2: Production Build

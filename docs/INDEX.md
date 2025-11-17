@@ -216,10 +216,10 @@ pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 
 # Run server (production)
-python -m uvicorn app.main:app --workers 4 --port 8000
+python -m uvicorn app.main:app --workers 4 --port 8001
 
 # Test API
-curl http://localhost:8000/docs
+curl http://localhost:8001/docs
 
 # Reset database
 rm presensi_rupa.db
@@ -263,26 +263,26 @@ See `API_DOCS.md` for full examples.
 ### Integration Testing
 ```bash
 # 1. Register
-curl -X POST http://localhost:8000/autentikasi/daftar ...
+curl -X POST http://localhost:8001/autentikasi/daftar ...
 
 # 2. Login
-curl -X POST http://localhost:8000/autentikasi/masuk ...
+curl -X POST http://localhost:8001/autentikasi/masuk ...
 
 # 3. Register face
-curl -X POST http://localhost:8000/profil/daftar-wajah \
+curl -X POST http://localhost:8001/profil/daftar-wajah \
   -H "Authorization: Bearer <TOKEN>" ...
 
 # 4. Attendance
-curl -X POST http://localhost:8000/absensi/cek-masuk \
+curl -X POST http://localhost:8001/absensi/cek-masuk \
   -H "Authorization: Bearer <TOKEN>" ...
 
 # 5. Check history
-curl -X GET http://localhost:8000/absensi/riwayat \
+curl -X GET http://localhost:8001/absensi/riwayat \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
 ### Interactive Testing
-Open Swagger UI: `http://localhost:8000/docs`
+Open Swagger UI: `http://localhost:8001/docs`
 
 ---
 

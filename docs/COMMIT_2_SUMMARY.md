@@ -201,7 +201,7 @@ Sizes:
 ### Environment Setup
 ```
 Development (.env):
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8001
 
 Production (.env.production):
 VITE_API_URL=/api
@@ -216,7 +216,7 @@ TypeScript (vite-env.d.ts):
 Vite (vite.config.ts):
 - React plugin enabled
 - Path alias: @ → src/
-- Dev proxy: /api → localhost:8000
+- Dev proxy: /api → localhost:8001
 
 TypeScript (tsconfig.json):
 - ES2020 target
@@ -250,7 +250,7 @@ Tailwind (tailwind.config.js):
 ### 🚀 Ready for Testing
 ```
 Frontend:  http://localhost:5173
-Backend:   http://localhost:8000/docs
+Backend:   http://localhost:8001/docs
 
 Test Account:
 - Username: test_user
@@ -347,7 +347,7 @@ cd presensi_rupa
 
 # Open browser
 # Frontend:  http://localhost:5173
-# Backend:   http://localhost:8000/docs
+# Backend:   http://localhost:8001/docs
 ```
 
 ### Build for Production

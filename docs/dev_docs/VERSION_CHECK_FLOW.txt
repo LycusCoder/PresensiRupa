@@ -94,7 +94,7 @@ USER RUNS SCRIPT
     ┌─────────────────────────┐
     │  ✅ SETUP COMPLETE      │
     │                         │
-    │  Backend: :8000         │
+    │  Backend: :8001         │
     │  Frontend: :5173        │
     └─────────────────────────┘
 
