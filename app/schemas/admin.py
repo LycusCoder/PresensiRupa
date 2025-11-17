@@ -184,3 +184,87 @@ class LogDetailResponse(BaseModel):
     """
     log: LogKehadiranDetail
     karyawan: KaryawanItem
+
+
+# ========== FASE 2.5 - LAPORAN & ANALYTICS ==========
+
+class StatistikJabatanItem(BaseModel):
+    """
+    Schema untuk statistik per jabatan/department.
+    """
+    jabatan: str = Field(..., description="Nama jabatan")
+    total_karyawan: int = Field(..., description="Total karyawan di jabatan ini")
+    total_hadir: int = Field(..., description="Total kehadiran (bulan ini)")
+    tingkat_kehadiran: float = Field(..., description="Persentase kehadiran (0-100)")
+
+
+class StatistikJabatanResponse(BaseModel):
+    """
+    Schema untuk response GET /admin/laporan/jabatan
+    
+    Statistik kehadiran per jabatan.
+    """
+    data: List[StatistikJabatanItem]
+    total_jabatan: int
+    bulan: str  # "YYYY-MM"
+
+
+class TrendBulananItem(BaseModel):
+    """
+    Schema untuk trend bulanan.
+    """
+    bulan: str = Field(..., description="Bulan dalam format YYYY-MM")
+    rata_rata_kehadiran: float = Field(..., description="Rata-rata tingkat kehadiran (%)")
+    total_absensi: int = Field(..., description="Total log absensi di bulan ini")
+
+
+class TrendBulananResponse(BaseModel):
+    """
+    Schema untuk response GET /admin/laporan/trend-bulanan
+    
+    Trend kehadiran bulanan.
+    """
+    data: List[TrendBulananItem]
+    total_bulan: int
+
+
+class KeterlambatanItem(BaseModel):
+    """
+    Schema untuk data keterlambatan karyawan.
+    
+    Note: Untuk MVP sederhana, kita anggap keterlambatan = absen setelah jam 09:00
+    """
+    id_pengguna: int
+    nama_lengkap: str
+    id_karyawan: str
+    jabatan: str
+    total_terlambat: int = Field(..., description="Total keterlambatan (bulan ini)")
+    jam_rata_rata: str = Field(..., description="Rata-rata jam kedatangan (HH:MM)")
+
+
+class KeterlambatanResponse(BaseModel):
+    """
+    Schema untuk response GET /admin/laporan/keterlambatan
+    
+    Laporan karyawan yang sering terlambat.
+    """
+    data: List[KeterlambatanItem]
+    total: int
+    bulan: str  # "YYYY-MM"
+    batas_jam: str = "09:00"  # Batas waktu tidak terlambat
+
+
+class RingkasanBulananResponse(BaseModel):
+    """
+    Schema untuk response GET /admin/laporan/ringkasan-bulanan
+    
+    Ringkasan lengkap laporan bulanan.
+    """
+    bulan: str  # "YYYY-MM"
+    total_karyawan: int
+    total_hari_kerja: int
+    rata_rata_kehadiran: float
+    total_absensi_sukses: int
+    total_absensi_gagal: int
+    karyawan_terbaik: Optional[KaryawanItem] = None  # Kehadiran tertinggi
+    statistik_jabatan: List[StatistikJabatanItem]

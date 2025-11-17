@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, desc, or_
 from typing import List, Optional
 from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 from app.db.database import get_db
 from app.db.models import Pengguna, LogAbsensi
 from app.schemas.admin import (
@@ -780,4 +781,433 @@ async def get_log_detail(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error mengambil detail log: {str(e)}"
+        )
+
+
+
+# ========== FASE 2.5 - LAPORAN & ANALYTICS ==========
+
+@router.get("/laporan/jabatan")
+async def get_statistik_jabatan(
+    bulan: Optional[str] = Query(None, description="Filter bulan (YYYY-MM), default: bulan ini"),
+    current_admin: Pengguna = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint: GET /admin/laporan/jabatan?bulan=2024-11
+    
+    Ambil statistik kehadiran per jabatan/department.
+    
+    Request:
+    - Query param: bulan (YYYY-MM, default: bulan ini)
+    - Header: Authorization: Bearer <token> (harus admin)
+    
+    Response: StatistikJabatanResponse
+    """
+    from app.schemas.admin import StatistikJabatanResponse, StatistikJabatanItem
+    from calendar import monthrange
+    
+    try:
+        # Parse bulan target
+        if bulan:
+            try:
+                target_date = datetime.strptime(bulan, "%Y-%m")
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Format bulan salah. Gunakan YYYY-MM"
+                )
+        else:
+            target_date = datetime.now()
+        
+        target_bulan = target_date.month
+        target_tahun = target_date.year
+        bulan_str = target_date.strftime("%Y-%m")
+        
+        # Get hari kerja di bulan ini (asumsi: semua hari kecuali weekend)
+        _, total_hari = monthrange(target_tahun, target_bulan)
+        
+        # Query semua jabatan unik
+        jabatan_list = db.query(Pengguna.jabatan).distinct().all()
+        
+        statistik_data = []
+        
+        for (jabatan_nama,) in jabatan_list:
+            if not jabatan_nama:
+                continue
+            
+            # Total karyawan di jabatan ini
+            total_karyawan = db.query(Pengguna).filter(Pengguna.jabatan == jabatan_nama).count()
+            
+            # Get IDs karyawan di jabatan ini
+            karyawan_ids = [
+                k.id_pengguna 
+                for k in db.query(Pengguna.id_pengguna).filter(Pengguna.jabatan == jabatan_nama).all()
+            ]
+            
+            # Total kehadiran SUKSES di bulan ini
+            total_hadir = db.query(LogAbsensi).filter(
+                and_(
+                    LogAbsensi.id_pengguna.in_(karyawan_ids),
+                    LogAbsensi.status == "SUKSES",
+                    func.extract('month', LogAbsensi.waktu) == target_bulan,
+                    func.extract('year', LogAbsensi.waktu) == target_tahun
+                )
+            ).distinct(LogAbsensi.id_pengguna, func.date(LogAbsensi.waktu)).count()
+            
+            # Hitung tingkat kehadiran
+            expected_total = total_karyawan * total_hari
+            tingkat = (total_hadir / expected_total * 100) if expected_total > 0 else 0.0
+            
+            statistik_data.append(StatistikJabatanItem(
+                jabatan=jabatan_nama,
+                total_karyawan=total_karyawan,
+                total_hadir=total_hadir,
+                tingkat_kehadiran=round(tingkat, 2)
+            ))
+        
+        # Sort by tingkat kehadiran descending
+        statistik_data.sort(key=lambda x: x.tingkat_kehadiran, reverse=True)
+        
+        return StatistikJabatanResponse(
+            data=statistik_data,
+            total_jabatan=len(statistik_data),
+            bulan=bulan_str
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error mengambil statistik jabatan: {str(e)}"
+        )
+
+
+@router.get("/laporan/trend-bulanan")
+async def get_trend_bulanan(
+    jumlah_bulan: int = Query(6, ge=1, le=12, description="Jumlah bulan terakhir (default: 6)"),
+    current_admin: Pengguna = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint: GET /admin/laporan/trend-bulanan?jumlah_bulan=6
+    
+    Ambil trend kehadiran bulanan (N bulan terakhir).
+    
+    Request:
+    - Query param: jumlah_bulan (default: 6, min: 1, max: 12)
+    - Header: Authorization: Bearer <token> (harus admin)
+    
+    Response: TrendBulananResponse
+    """
+    from app.schemas.admin import TrendBulananResponse, TrendBulananItem
+    from dateutil.relativedelta import relativedelta
+    from calendar import monthrange
+    
+    try:
+        total_karyawan = db.query(Pengguna).count()
+        trend_data = []
+        
+        today = datetime.now()
+        
+        for i in range(jumlah_bulan - 1, -1, -1):
+            # Target bulan = today - i bulan
+            target_date = today - relativedelta(months=i)
+            target_bulan = target_date.month
+            target_tahun = target_date.year
+            bulan_str = target_date.strftime("%Y-%m")
+            
+            # Total hari di bulan ini
+            _, total_hari = monthrange(target_tahun, target_bulan)
+            
+            # Total absensi SUKSES di bulan ini
+            total_absensi = db.query(LogAbsensi).filter(
+                and_(
+                    LogAbsensi.status == "SUKSES",
+                    func.extract('month', LogAbsensi.waktu) == target_bulan,
+                    func.extract('year', LogAbsensi.waktu) == target_tahun
+                )
+            ).distinct(LogAbsensi.id_pengguna, func.date(LogAbsensi.waktu)).count()
+            
+            # Rata-rata kehadiran
+            expected = total_karyawan * total_hari
+            rata_rata = (total_absensi / expected * 100) if expected > 0 else 0.0
+            
+            trend_data.append(TrendBulananItem(
+                bulan=bulan_str,
+                rata_rata_kehadiran=round(rata_rata, 2),
+                total_absensi=total_absensi
+            ))
+        
+        return TrendBulananResponse(
+            data=trend_data,
+            total_bulan=jumlah_bulan
+        )
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error mengambil trend bulanan: {str(e)}"
+        )
+
+
+@router.get("/laporan/keterlambatan")
+async def get_laporan_keterlambatan(
+    bulan: Optional[str] = Query(None, description="Filter bulan (YYYY-MM), default: bulan ini"),
+    limit: int = Query(10, ge=1, le=50, description="Jumlah data (default: 10)"),
+    current_admin: Pengguna = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint: GET /admin/laporan/keterlambatan?bulan=2024-11&limit=10
+    
+    Ambil laporan karyawan yang sering terlambat.
+    Keterlambatan = absen setelah jam 09:00 WIB.
+    
+    Request:
+    - Query params: bulan (YYYY-MM), limit (default: 10)
+    - Header: Authorization: Bearer <token> (harus admin)
+    
+    Response: KeterlambatanResponse
+    """
+    from app.schemas.admin import KeterlambatanResponse, KeterlambatanItem
+    
+    try:
+        # Parse bulan target
+        if bulan:
+            try:
+                target_date = datetime.strptime(bulan, "%Y-%m")
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Format bulan salah. Gunakan YYYY-MM"
+                )
+        else:
+            target_date = datetime.now()
+        
+        target_bulan = target_date.month
+        target_tahun = target_date.year
+        bulan_str = target_date.strftime("%Y-%m")
+        
+        # Batas waktu tidak terlambat: 09:00
+        from datetime import time as dt_time
+        batas_waktu = dt_time(9, 0)
+        
+        # Query semua karyawan
+        karyawan_list = db.query(Pengguna).all()
+        
+        keterlambatan_data = []
+        
+        for karyawan in karyawan_list:
+            # Query log absensi SUKSES di bulan ini
+            logs = db.query(LogAbsensi).filter(
+                and_(
+                    LogAbsensi.id_pengguna == karyawan.id_pengguna,
+                    LogAbsensi.status == "SUKSES",
+                    func.extract('month', LogAbsensi.waktu) == target_bulan,
+                    func.extract('year', LogAbsensi.waktu) == target_tahun
+                )
+            ).all()
+            
+            if not logs:
+                continue
+            
+            # Hitung keterlambatan
+            total_terlambat = 0
+            jam_list = []
+            
+            for log in logs:
+                waktu_absen = log.waktu.time()
+                jam_list.append(waktu_absen)
+                
+                if waktu_absen > batas_waktu:
+                    total_terlambat += 1
+            
+            # Hanya tampilkan yang ada keterlambatan
+            if total_terlambat > 0:
+                # Hitung rata-rata jam
+                total_detik = sum(
+                    (t.hour * 3600 + t.minute * 60 + t.second) for t in jam_list
+                )
+                rata_detik = total_detik // len(jam_list) if jam_list else 0
+                rata_jam = f"{rata_detik // 3600:02d}:{(rata_detik % 3600) // 60:02d}"
+                
+                keterlambatan_data.append(KeterlambatanItem(
+                    id_pengguna=karyawan.id_pengguna,
+                    nama_lengkap=f"{karyawan.nama_depan} {karyawan.nama_belakang}",
+                    id_karyawan=karyawan.id_karyawan,
+                    jabatan=karyawan.jabatan,
+                    total_terlambat=total_terlambat,
+                    jam_rata_rata=rata_jam
+                ))
+        
+        # Sort by total_terlambat descending
+        keterlambatan_data.sort(key=lambda x: x.total_terlambat, reverse=True)
+        
+        # Limit results
+        keterlambatan_data = keterlambatan_data[:limit]
+        
+        return KeterlambatanResponse(
+            data=keterlambatan_data,
+            total=len(keterlambatan_data),
+            bulan=bulan_str,
+            batas_jam="09:00"
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error mengambil laporan keterlambatan: {str(e)}"
+        )
+
+
+@router.get("/laporan/ringkasan-bulanan")
+async def get_ringkasan_bulanan(
+    bulan: Optional[str] = Query(None, description="Filter bulan (YYYY-MM), default: bulan ini"),
+    current_admin: Pengguna = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint: GET /admin/laporan/ringkasan-bulanan?bulan=2024-11
+    
+    Ambil ringkasan lengkap laporan bulanan.
+    
+    Request:
+    - Query param: bulan (YYYY-MM, default: bulan ini)
+    - Header: Authorization: Bearer <token> (harus admin)
+    
+    Response: RingkasanBulananResponse
+    """
+    from app.schemas.admin import RingkasanBulananResponse, StatistikJabatanItem
+    from calendar import monthrange
+    
+    try:
+        # Parse bulan target
+        if bulan:
+            try:
+                target_date = datetime.strptime(bulan, "%Y-%m")
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Format bulan salah. Gunakan YYYY-MM"
+                )
+        else:
+            target_date = datetime.now()
+        
+        target_bulan = target_date.month
+        target_tahun = target_date.year
+        bulan_str = target_date.strftime("%Y-%m")
+        
+        # 1. Total karyawan
+        total_karyawan = db.query(Pengguna).count()
+        
+        # 2. Total hari kerja (asumsi: semua hari)
+        _, total_hari_kerja = monthrange(target_tahun, target_bulan)
+        
+        # 3. Total absensi SUKSES & GAGAL
+        total_absensi_sukses = db.query(LogAbsensi).filter(
+            and_(
+                LogAbsensi.status == "SUKSES",
+                func.extract('month', LogAbsensi.waktu) == target_bulan,
+                func.extract('year', LogAbsensi.waktu) == target_tahun
+            )
+        ).distinct(LogAbsensi.id_pengguna, func.date(LogAbsensi.waktu)).count()
+        
+        total_absensi_gagal = db.query(LogAbsensi).filter(
+            and_(
+                LogAbsensi.status == "GAGAL",
+                func.extract('month', LogAbsensi.waktu) == target_bulan,
+                func.extract('year', LogAbsensi.waktu) == target_tahun
+            )
+        ).count()
+        
+        # 4. Rata-rata kehadiran
+        expected_total = total_karyawan * total_hari_kerja
+        rata_rata_kehadiran = (total_absensi_sukses / expected_total * 100) if expected_total > 0 else 0.0
+        
+        # 5. Karyawan terbaik (tingkat kehadiran tertinggi)
+        karyawan_terbaik = None
+        tingkat_tertinggi = 0.0
+        
+        for karyawan in db.query(Pengguna).all():
+            hadir = db.query(LogAbsensi).filter(
+                and_(
+                    LogAbsensi.id_pengguna == karyawan.id_pengguna,
+                    LogAbsensi.status == "SUKSES",
+                    func.extract('month', LogAbsensi.waktu) == target_bulan,
+                    func.extract('year', LogAbsensi.waktu) == target_tahun
+                )
+            ).distinct(func.date(LogAbsensi.waktu)).count()
+            
+            tingkat = (hadir / total_hari_kerja * 100) if total_hari_kerja > 0 else 0.0
+            
+            if tingkat > tingkat_tertinggi:
+                tingkat_tertinggi = tingkat
+                karyawan_terbaik = karyawan
+        
+        # 6. Statistik per jabatan
+        jabatan_list = db.query(Pengguna.jabatan).distinct().all()
+        statistik_jabatan = []
+        
+        for (jabatan_nama,) in jabatan_list:
+            if not jabatan_nama:
+                continue
+            
+            total_karyawan_jabatan = db.query(Pengguna).filter(Pengguna.jabatan == jabatan_nama).count()
+            karyawan_ids = [
+                k.id_pengguna 
+                for k in db.query(Pengguna.id_pengguna).filter(Pengguna.jabatan == jabatan_nama).all()
+            ]
+            
+            total_hadir = db.query(LogAbsensi).filter(
+                and_(
+                    LogAbsensi.id_pengguna.in_(karyawan_ids),
+                    LogAbsensi.status == "SUKSES",
+                    func.extract('month', LogAbsensi.waktu) == target_bulan,
+                    func.extract('year', LogAbsensi.waktu) == target_tahun
+                )
+            ).distinct(LogAbsensi.id_pengguna, func.date(LogAbsensi.waktu)).count()
+            
+            expected = total_karyawan_jabatan * total_hari_kerja
+            tingkat = (total_hadir / expected * 100) if expected > 0 else 0.0
+            
+            statistik_jabatan.append(StatistikJabatanItem(
+                jabatan=jabatan_nama,
+                total_karyawan=total_karyawan_jabatan,
+                total_hadir=total_hadir,
+                tingkat_kehadiran=round(tingkat, 2)
+            ))
+        
+        return RingkasanBulananResponse(
+            bulan=bulan_str,
+            total_karyawan=total_karyawan,
+            total_hari_kerja=total_hari_kerja,
+            rata_rata_kehadiran=round(rata_rata_kehadiran, 2),
+            total_absensi_sukses=total_absensi_sukses,
+            total_absensi_gagal=total_absensi_gagal,
+            karyawan_terbaik=None if not karyawan_terbaik else {
+                "id_pengguna": karyawan_terbaik.id_pengguna,
+                "nama_pengguna": karyawan_terbaik.nama_pengguna,
+                "nama_depan": karyawan_terbaik.nama_depan,
+                "nama_belakang": karyawan_terbaik.nama_belakang,
+                "id_karyawan": karyawan_terbaik.id_karyawan,
+                "jabatan": karyawan_terbaik.jabatan,
+                "alamat_surel": karyawan_terbaik.alamat_surel,
+                "sudah_daftar_wajah": karyawan_terbaik.sudah_daftar_wajah,
+                "status_kehadiran": karyawan_terbaik.status_kehadiran,
+                "tanggal_masuk": karyawan_terbaik.tanggal_masuk,
+                "catatan_admin": karyawan_terbaik.catatan_admin
+            },
+            statistik_jabatan=statistik_jabatan
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error mengambil ringkasan bulanan: {str(e)}"
         )

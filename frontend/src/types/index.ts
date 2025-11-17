@@ -181,6 +181,59 @@ export interface LogDetailResponse {
   karyawan: KaryawanItem
 }
 
+// ========== FASE 2.5 - LAPORAN & ANALYTICS ==========
+
+export interface StatistikJabatanItem {
+  jabatan: string
+  total_karyawan: number
+  total_hadir: number
+  tingkat_kehadiran: number // 0-100
+}
+
+export interface StatistikJabatanResponse {
+  data: StatistikJabatanItem[]
+  total_jabatan: number
+  bulan: string // "YYYY-MM"
+}
+
+export interface TrendBulananItem {
+  bulan: string // "YYYY-MM"
+  rata_rata_kehadiran: number // 0-100
+  total_absensi: number
+}
+
+export interface TrendBulananResponse {
+  data: TrendBulananItem[]
+  total_bulan: number
+}
+
+export interface KeterlambatanItem {
+  id_pengguna: number
+  nama_lengkap: string
+  id_karyawan: string
+  jabatan: string
+  total_terlambat: number
+  jam_rata_rata: string // "HH:MM"
+}
+
+export interface KeterlambatanResponse {
+  data: KeterlambatanItem[]
+  total: number
+  bulan: string // "YYYY-MM"
+  batas_jam: string // "09:00"
+}
+
+export interface RingkasanBulananResponse {
+  bulan: string // "YYYY-MM"
+  total_karyawan: number
+  total_hari_kerja: number
+  rata_rata_kehadiran: number // 0-100
+  total_absensi_sukses: number
+  total_absensi_gagal: number
+  karyawan_terbaik: KaryawanItem | null
+  statistik_jabatan: StatistikJabatanItem[]
+}
+
 // ========== API ERROR ==========
 export interface ApiError {
   detail: string | Array<{ loc: string[]; msg: string; type: string }>

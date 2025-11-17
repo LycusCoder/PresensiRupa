@@ -18,7 +18,11 @@ import {
   DaftarKehadiranResponse,
   ManualAttendanceRequest,
   LogAbsensiItem,
-  LogDetailResponse
+  LogDetailResponse,
+  StatistikJabatanResponse,
+  TrendBulananResponse,
+  KeterlambatanResponse,
+  RingkasanBulananResponse
 } from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001'
@@ -234,6 +238,53 @@ class ApiService {
    * GET /admin/kehadiran/{id_log}
    * Ambil detail satu log absensi
    */
+
+  // ========== ADMIN - LAPORAN & ANALYTICS (FASE 2.5) ==========
+
+  /**
+   * GET /admin/laporan/jabatan?bulan=YYYY-MM
+   * Ambil statistik kehadiran per jabatan/department
+   */
+  async getStatistikJabatan(bulan?: string): Promise<StatistikJabatanResponse> {
+    const response = await this.client.get<StatistikJabatanResponse>('/admin/laporan/jabatan', {
+      params: { bulan }
+    })
+    return response.data
+  }
+
+  /**
+   * GET /admin/laporan/trend-bulanan?jumlah_bulan=6
+   * Ambil trend kehadiran bulanan (N bulan terakhir)
+   */
+  async getTrendBulanan(jumlah_bulan: number = 6): Promise<TrendBulananResponse> {
+    const response = await this.client.get<TrendBulananResponse>('/admin/laporan/trend-bulanan', {
+      params: { jumlah_bulan }
+    })
+    return response.data
+  }
+
+  /**
+   * GET /admin/laporan/keterlambatan?bulan=YYYY-MM&limit=10
+   * Ambil laporan karyawan yang sering terlambat
+   */
+  async getLaporanKeterlambatan(bulan?: string, limit: number = 10): Promise<KeterlambatanResponse> {
+    const response = await this.client.get<KeterlambatanResponse>('/admin/laporan/keterlambatan', {
+      params: { bulan, limit }
+    })
+    return response.data
+  }
+
+  /**
+   * GET /admin/laporan/ringkasan-bulanan?bulan=YYYY-MM
+   * Ambil ringkasan lengkap laporan bulanan
+   */
+  async getRingkasanBulanan(bulan?: string): Promise<RingkasanBulananResponse> {
+    const response = await this.client.get<RingkasanBulananResponse>('/admin/laporan/ringkasan-bulanan', {
+      params: { bulan }
+    })
+    return response.data
+  }
+
   async getLogDetail(id_log: number): Promise<LogDetailResponse> {
     const response = await this.client.get<LogDetailResponse>(`/admin/kehadiran/${id_log}`)
     return response.data
