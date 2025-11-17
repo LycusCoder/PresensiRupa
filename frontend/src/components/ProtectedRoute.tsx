@@ -17,13 +17,24 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/masuk" state={{ from: location }} replace />
   }
 
+  const userRole = getUserRole()
+
   // Jika ada role restriction, cek apakah user memiliki akses
   if (allowedRoles && allowedRoles.length > 0) {
-    const userRole = getUserRole()
     if (!allowedRoles.includes(userRole)) {
       // Redirect ke dashboard yang sesuai dengan role
       const redirectPath = userRole === 'admin' ? '/admin/dashboard' : '/dashboard'
       return <Navigate to={redirectPath} replace />
+    }
+  } else {
+    // Tidak ada role restriction - auto redirect berdasarkan role
+    // Jika admin mengakses route karyawan (kecuali root "/"), redirect ke admin dashboard
+    if (userRole === 'admin' && !location.pathname.startsWith('/admin') && location.pathname !== '/') {
+      return <Navigate to="/admin/dashboard" replace />
+    }
+    // Jika karyawan mengakses route admin, redirect ke karyawan dashboard
+    if (userRole === 'karyawan' && location.pathname.startsWith('/admin')) {
+      return <Navigate to="/dashboard" replace />
     }
   }
 

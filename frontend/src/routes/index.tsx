@@ -43,9 +43,9 @@ export function AppRoutes() {
           </PublicRoute>
         } />
 
-        {/* Karyawan Routes */}
+        {/* Root redirect */}
         <Route path="/" element={
-          <ProtectedRoute allowedRoles={['karyawan']}>
+          <ProtectedRoute>
             <MainLayout />
           </ProtectedRoute>
         }>
