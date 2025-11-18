@@ -8,6 +8,7 @@ import {
   CheckInRequest, 
   CheckInResponse, 
   AttendanceRecord,
+  DashboardKaryawanStats,
   StatistikDashboard,
   TrendKehadiranResponse,
   AktivitasTerbaruResponse,
@@ -123,6 +124,17 @@ class ApiService {
 
   async getAttendanceHistory(): Promise<AttendanceRecord[]> {
     const response = await this.client.get<AttendanceRecord[]>('/absensi/riwayat')
+    return response.data
+  }
+
+  // ========== KARYAWAN DASHBOARD (FASE 3.1) ==========
+  
+  /**
+   * GET /karyawan/dashboard-stats
+   * Ambil statistik lengkap untuk dashboard karyawan
+   */
+  async getDashboardStats(): Promise<DashboardKaryawanStats> {
+    const response = await this.client.get<DashboardKaryawanStats>('/karyawan/dashboard-stats')
     return response.data
   }
 

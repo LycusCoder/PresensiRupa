@@ -94,13 +94,13 @@ Memperbarui frontend PresensiRupa agar fully functional dan terintegrasi dengan 
 **Target:** Konsistensi theme - Light = terang semua, Dark = gelap semua
 
 **Yang Perlu Diperbaiki:**
-- [ ] Fix AdminDashboardPage - Cards (Total Karyawan, Hadir Hari Ini, dll) masih gelap di light mode
-- [ ] Fix chart background & grid colors untuk light mode
-- [ ] Fix "Aktivitas Terbaru" section background
-- [ ] Fix "Aksi Cepat" cards background
-- [ ] Pastikan semua admin pages (Karyawan, Kehadiran, Laporan, Profil, Pengaturan) konsisten
-- [ ] Review & fix text colors untuk readability di light mode
-- [ ] Update color scheme:
+- [x] Fix AdminDashboardPage - Cards (Total Karyawan, Hadir Hari Ini, dll) masih gelap di light mode
+- [x] Fix chart background & grid colors untuk light mode
+- [x] Fix "Aktivitas Terbaru" section background
+- [x] Fix "Aksi Cepat" cards background
+- [x] Pastikan semua admin pages (Karyawan, Kehadiran, Laporan, Profil, Pengaturan) konsisten
+- [x] Review & fix text colors untuk readability di light mode
+- [x] Update color scheme:
   - Light Mode: bg-white, bg-gray-50, text-gray-900, border-gray-200
   - Dark Mode: bg-gray-800, bg-gray-900, text-white, border-gray-700 (sudah OK ✅)
 
@@ -114,14 +114,14 @@ Memperbarui frontend PresensiRupa agar fully functional dan terintegrasi dengan 
 ### **FASE 3: Dashboard Karyawan** 👤
 **Prioritas: HIGH**
 
-#### 3.1 Karyawan Dashboard
-- [ ] Welcome section dengan info user
-- [ ] Status hari ini (sudah absen atau belum)
-- [ ] Total hadir bulan ini
-- [ ] Status wajah terdaftar
-- [ ] Riwayat absensi terbaru (5 terakhir)
-- [ ] Catatan admin (jika ada)
-- [ ] Quick action: Absen Sekarang button
+#### 3.1 Karyawan Dashboard - SELESAI ✅
+- [x] Welcome section dengan info user
+- [x] Status hari ini (sudah absen atau belum)
+- [x] Total hadir bulan ini
+- [x] Status wajah terdaftar
+- [x] Riwayat absensi terbaru (5 terakhir)
+- [x] Catatan admin (jika ada)
+- [x] Quick action: Absen Sekarang button
 
 #### 3.2 Face Registration Page
 - [ ] Camera capture dari browser (live video)

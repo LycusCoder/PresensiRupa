@@ -66,6 +66,38 @@ export interface AttendanceRecord {
   status: string
 }
 
+// ========== KARYAWAN DASHBOARD (FASE 3.1) ==========
+
+export interface RiwayatSingkatItem {
+  tanggal: string // YYYY-MM-DD
+  waktu: string // HH:MM
+  status: string // SUKSES/GAGAL
+  jumlah_cocok: number | null
+}
+
+export interface DashboardKaryawanStats {
+  // User info
+  nama_lengkap: string
+  jabatan: string
+  id_karyawan: string
+  
+  // Status
+  sudah_daftar_wajah: boolean
+  sudah_absen_hari_ini: boolean
+  status_kehadiran_hari_ini: string // "Hadir" / "Belum Absen" / "Terlambat"
+  
+  // Stats bulan ini
+  total_hadir_bulan_ini: number
+  total_hari_kerja_bulan_ini: number
+  tingkat_kehadiran_bulan_ini: number // 0-100
+  
+  // Riwayat terbaru
+  riwayat_terbaru: RiwayatSingkatItem[]
+  
+  // Admin notes
+  catatan_admin: string | null
+}
+
 // ========== ADMIN TYPES ==========
 
 // Statistik Dashboard
