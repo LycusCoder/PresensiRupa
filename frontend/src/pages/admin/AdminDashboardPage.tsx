@@ -152,17 +152,17 @@ export function AdminDashboardPage() {
     return (
       <div className="space-y-6 animate-pulse">
         <div>
-          <div className="h-9 w-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded mt-2"></div>
+          <div className="h-9 w-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
+          <div className="h-5 w-48 bg-gray-300 dark:bg-gray-700 rounded mt-2"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+            <div key={i} className="h-32 bg-gray-300 dark:bg-gray-700 rounded-xl"></div>
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-          <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+          <div className="h-96 bg-gray-300 dark:bg-gray-700 rounded-xl"></div>
+          <div className="h-96 bg-gray-300 dark:bg-gray-700 rounded-xl"></div>
         </div>
       </div>
     )
@@ -222,23 +222,26 @@ export function AdminDashboardPage() {
           {trendData && trendData.data.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={trendData.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="var(--chart-grid)"
+                />
                 <XAxis 
                   dataKey="tanggal" 
                   tickFormatter={formatTanggalChart}
-                  stroke="#6b7280"
+                  stroke="var(--chart-axis)"
                   style={{ fontSize: '12px' }}
                 />
                 <YAxis 
-                  stroke="#6b7280"
+                  stroke="var(--chart-axis)"
                   style={{ fontSize: '12px' }}
                 />
                 <Tooltip 
                   contentStyle={{
-                    backgroundColor: '#1f2937',
-                    border: 'none',
+                    backgroundColor: 'var(--tooltip-bg)',
+                    border: '1px solid var(--tooltip-border)',
                     borderRadius: '8px',
-                    color: '#fff'
+                    color: 'var(--tooltip-text)'
                   }}
                   labelFormatter={(label) => formatTanggalChart(label)}
                   formatter={(value: number, name: string) => {

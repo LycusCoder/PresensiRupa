@@ -1,4 +1,5 @@
 module.exports = {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -29,6 +30,37 @@ module.exports = {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
+        },
+        // Semantic colors untuk light/dark mode consistency
+        background: {
+          light: '#f9fafb',     // gray-50 untuk light mode
+          DEFAULT: '#f9fafb',
+          dark: '#111827',       // gray-900 untuk dark mode
+        },
+        surface: {
+          light: '#ffffff',      // white untuk cards di light mode
+          DEFAULT: '#ffffff',
+          dark: '#1f2937',       // gray-800 untuk cards di dark mode
+        },
+        surfaceHover: {
+          light: '#f3f4f6',      // gray-100 untuk hover di light mode
+          DEFAULT: '#f3f4f6',
+          dark: '#374151',       // gray-700 untuk hover di dark mode
+        },
+        textPrimary: {
+          light: '#111827',      // gray-900 untuk text utama di light mode
+          DEFAULT: '#111827',
+          dark: '#ffffff',       // white untuk text utama di dark mode
+        },
+        textSecondary: {
+          light: '#6b7280',      // gray-500 untuk text secondary di light mode
+          DEFAULT: '#6b7280',
+          dark: '#9ca3af',       // gray-400 untuk text secondary di dark mode
+        },
+        border: {
+          light: '#e5e7eb',      // gray-200 untuk border di light mode
+          DEFAULT: '#e5e7eb',
+          dark: '#374151',       // gray-700 untuk border di dark mode
         },
       },
       fontFamily: {

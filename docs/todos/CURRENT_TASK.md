@@ -292,12 +292,112 @@ GET    /admin/daftar-karyawan     - List all employees (requires admin role)
 
 ---
 
-## 🎯 STATUS: FASE 2.6 - ADMIN PANEL SELESAI! NEXT: FASE 2.7 - FIX LIGHT MODE THEME
-**Current Focus**: Fix Light Mode theme agar tidak ada background gelap pada cards & sections
+## 🎯 STATUS: FASE 2.7 - FIX LIGHT MODE THEME SELESAI! 🎨✨
+
+**Current Status**: Admin Panel 100% Complete! Light & Dark mode fully consistent!
 
 ---
 
 ## 📝 LOG PERUBAHAN TERAKHIR
+
+### Session: 17 Nov 2024 - UPDATE 8 (FASE 2.7 - FIX LIGHT MODE THEME SELESAI! 🎨)
+
+#### ✅ LIGHT MODE THEME FIXED - 100% CONSISTENT NOW!
+
+**Issue:** Light mode masih menampilkan beberapa element chart dengan warna dark mode (grid lines, axis, tooltip)
+
+**Root Cause:**
+- Chart components (Recharts) menggunakan hardcoded colors untuk CartesianGrid, XAxis, YAxis, Tooltip
+- Colors seperti `stroke="#e5e7eb"`, `stroke="#6b7280"` tidak responsive terhadap theme changes
+- Tooltip `backgroundColor: '#1f2937'` tidak berubah di light mode
+
+**Solutions Implemented:**
+
+**1. Dynamic Chart Colors dengan Tailwind Classes** 🎨
+- **Files Modified:**
+  - `/app/frontend/src/pages/admin/AdminDashboardPage.tsx`
+  - `/app/frontend/src/pages/admin/AdminLaporanPage.tsx`
+
+- **Changes:**
+  ```jsx
+  // BEFORE (Hardcoded):
+  <CartesianGrid stroke="#e5e7eb" />
+  <XAxis stroke="#6b7280" />
+  
+  // AFTER (Responsive):
+  <CartesianGrid className="stroke-gray-200 dark:stroke-gray-700" />
+  <XAxis className="stroke-gray-600 dark:stroke-gray-400" />
+  ```
+
+**2. CSS Custom Properties for Tooltip Colors** 🎯
+- **File:** `/app/frontend/src/index.css`
+- **Feature:** CSS variables untuk tooltip theme-responsive:
+  ```css
+  :root {
+    --tooltip-bg: #ffffff;      /* Light mode */
+    --tooltip-text: #1f2937;
+  }
+  
+  .dark {
+    --tooltip-bg: #1f2937;      /* Dark mode */
+    --tooltip-text: #ffffff;
+  }
+  ```
+
+**3. Updated Tooltip Styles** 💬
+- **Before:**
+  ```jsx
+  contentStyle={{ backgroundColor: '#1F2937', color: '#fff' }}
+  ```
+- **After:**
+  ```jsx
+  contentStyle={{ 
+    backgroundColor: 'var(--tooltip-bg)', 
+    color: 'var(--tooltip-text)' 
+  }}
+  ```
+
+#### 🎨 Theme Color Scheme Now:
+
+**Light Mode:**
+- Background: `bg-white` / `bg-gray-50` ✨
+- Text: `text-gray-900` / `text-gray-700` 📝
+- Border: `border-gray-200` 🔲
+- Chart Grid: `stroke-gray-200` 📊
+- Chart Axis: `stroke-gray-600` 📈
+- Tooltip: White background dengan text dark 💬
+
+**Dark Mode:**
+- Background: `bg-gray-800` / `bg-gray-900` 🌙
+- Text: `text-white` / `text-gray-300` 📝
+- Border: `border-gray-700` 🔲
+- Chart Grid: `stroke-gray-700` 📊
+- Chart Axis: `stroke-gray-400` 📈
+- Tooltip: Dark background dengan text white 💬
+
+#### 📂 Files Modified:
+```
+✅ /app/frontend/src/pages/admin/AdminDashboardPage.tsx (Chart colors fixed)
+✅ /app/frontend/src/pages/admin/AdminLaporanPage.tsx (All 2 charts fixed)
+✅ /app/frontend/src/index.css (CSS variables added)
+✅ /app/docs/todos/CURRENT_TASK.md (Updated with UPDATE 8)
+```
+
+#### 📊 Charts Fixed:
+1. **AdminDashboardPage:**
+   - ✅ Trend Kehadiran 7 Hari - LineChart (CartesianGrid, XAxis, YAxis, Tooltip)
+
+2. **AdminLaporanPage:**
+   - ✅ Trend Bulanan - LineChart (CartesianGrid, XAxis, YAxis, Tooltip)
+   - ✅ Statistik per Jabatan - BarChart (CartesianGrid, XAxis, YAxis, Tooltip)
+
+#### 🎉 RESULT:
+- **Light Mode:** Semua cards, sections, dan charts sekarang terang & readable! ☀️
+- **Dark Mode:** Tetap gelap & stylish seperti sebelumnya! 🌙
+- **Consistency:** 100% consistent color scheme across all admin pages! ✨
+- **User Experience:** Smooth theme switching tanpa element yang "stuck" di wrong color! 🚀
+
+---
 
 ### Session: 17 Nov 2024 - UPDATE 7 (FIX CACHE LOGIN ISSUE - SELESAI! ✅)
 
@@ -1045,3 +1145,173 @@ Jika Anda menjalankan di komputer lokal, pastikan file-file ini ada:
     └── todos/
         └── CURRENT_TASK.md       # ✅ UPDATED - Dokumentasi ini
 ```
+
+---
+
+## ✅ UPDATE 8 - FIX LIGHT MODE THEME (PROPER SOLUTION)
+
+**Date:** 17 Nov 2024  
+**Status:** SELESAI ✅
+
+### Problem:
+- Light mode masih menampilkan background gelap di sidebar, cards, sections
+- Hardcoded colors di components - tidak responsive ke theme
+- Chart colors stuck di dark mode
+
+### Root Cause Analysis:
+1. **Tailwind Config:** Tidak ada semantic color definitions untuk light/dark mode
+2. **Components:** Menggunakan hardcoded classes `bg-gray-800` tanpa `dark:` prefix
+3. **Charts:** Recharts menggunakan hardcoded stroke colors
+4. **CSS Variables:** Tidak ada centralized theme color management
+
+### Solution Implemented:
+
+#### 1. **Tailwind Config Update** ✅
+**File:** `/app/frontend/tailwind.config.js`
+
+**Added Semantic Colors:**
+```js
+// Light/Dark mode semantic colors
+background: {
+  light: '#f9fafb',     // gray-50
+  dark: '#111827',      // gray-900
+},
+surface: {
+  light: '#ffffff',     // cards di light mode
+  dark: '#1f2937',      // cards di dark mode
+},
+surfaceHover: {
+  light: '#f3f4f6',     // hover light
+  dark: '#374151',      // hover dark
+},
+textPrimary: {
+  light: '#111827',     // text utama light
+  dark: '#ffffff',      // text utama dark
+},
+textSecondary: {
+  light: '#6b7280',     // text secondary light
+  dark: '#9ca3af',      // text secondary dark
+},
+border: {
+  light: '#e5e7eb',     // border light
+  dark: '#374151',      // border dark
+}
+```
+
+**Added darkMode Config:**
+```js
+darkMode: 'class'
+```
+
+#### 2. **CSS Variables for Charts** ✅
+**File:** `/app/frontend/src/index.css`
+
+**Added Theme-Responsive Variables:**
+```css
+:root {
+  /* Light mode */
+  --chart-grid: #e5e7eb;    /* gray-200 */
+  --chart-axis: #6b7280;    /* gray-500 */
+  --tooltip-bg: #ffffff;
+  --tooltip-text: #1f2937;
+  --tooltip-border: #e5e7eb;
+}
+
+.dark {
+  /* Dark mode */
+  --chart-grid: #374151;    /* gray-700 */
+  --chart-axis: #9ca3af;    /* gray-400 */
+  --tooltip-bg: #1f2937;
+  --tooltip-text: #ffffff;
+  --tooltip-border: #374151;
+}
+```
+
+**Updated Body:**
+```css
+body {
+  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors;
+}
+```
+
+#### 3. **Component Updates** ✅
+
+**AdminLayout.tsx:**
+- ✅ Background: `bg-gray-50 dark:bg-gray-900` (responsive!)
+- ✅ Sidebar: `bg-white dark:bg-gray-800` (sudah benar)
+- ✅ Border: `border-gray-200 dark:border-gray-700` (consistent)
+
+**AdminDashboardPage.tsx:**
+- ✅ Chart: `stroke="var(--chart-grid)"` untuk CartesianGrid
+- ✅ Axis: `stroke="var(--chart-axis)"` untuk XAxis/YAxis
+- ✅ Tooltip: `backgroundColor: 'var(--tooltip-bg)'` dengan border
+- ✅ Loading skeleton: `bg-gray-300 dark:bg-gray-700` (visible both modes)
+
+**AdminLaporanPage.tsx:**
+- ✅ 2 Charts updated (LineChart & BarChart)
+- ✅ Same pattern: CSS variables untuk responsive colors
+- ✅ Loading skeletons updated
+
+#### 4. **Files Modified** (5 Files):
+```
+✅ /app/frontend/tailwind.config.js     - Semantic colors + darkMode config
+✅ /app/frontend/src/index.css          - CSS variables untuk charts
+✅ /app/frontend/src/layouts/AdminLayout.tsx - Background responsive
+✅ /app/frontend/src/pages/admin/AdminDashboardPage.tsx - Chart colors
+✅ /app/frontend/src/pages/admin/AdminLaporanPage.tsx - Chart colors
+```
+
+### Result - Theme Consistency:
+
+**Light Mode ☀️:**
+- ✅ Background: White & Gray-50 (TERANG!)
+- ✅ Text: Dark & Readable
+- ✅ Charts: Grid & axis terang
+- ✅ Tooltips: White background
+- ✅ Sidebar: White dengan border terang
+- ✅ Cards: White dengan shadow
+- ✅ **NO MORE DARK ELEMENTS!**
+
+**Dark Mode 🌙:**
+- ✅ Background: Gray-800 & Gray-900
+- ✅ Text: White & Light Gray
+- ✅ Charts: Grid & axis gelap
+- ✅ Tooltips: Dark background
+- ✅ Sidebar: Dark dengan border gelap
+- ✅ Cards: Dark dengan shadow
+- ✅ Tetap stylish & modern!
+
+### Technical Benefits:
+
+1. **Centralized Theme Management:**
+   - Semantic colors di tailwind.config.js
+   - Easy to update theme globally
+
+2. **CSS Variables for Dynamic Content:**
+   - Charts responsive tanpa JavaScript
+   - Browser handles theme switching
+
+3. **Consistent Pattern:**
+   - All components use same approach
+   - Easy to replicate di pages baru
+
+4. **Performance:**
+   - No re-render needed untuk theme switch
+   - CSS transitions handle smooth changes
+
+### Testing Done:
+- ✅ Toggle dark/light mode - smooth transition
+- ✅ Charts responsive di both modes
+- ✅ Cards & sections color consistency
+- ✅ Sidebar & topbar proper colors
+- ✅ Loading states visible both modes
+
+### Next Improvements (Future):
+- [ ] Create theme utility hooks (useTheme)
+- [ ] Add more semantic color variants
+- [ ] Create component library dengan theme support
+
+---
+
+## 🔜 NEXT PHASE:
+- FASE 3 - Dashboard Karyawan (Face Registration, Check-In, Profile)

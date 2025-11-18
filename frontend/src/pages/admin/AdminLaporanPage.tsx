@@ -300,23 +300,28 @@ export function AdminLaporanPage() {
           </div>
 
           {loadingTrend ? (
-            <div className="h-80 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            <div className="h-80 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
           ) : trendBulanan && trendBulanan.data.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={trendBulanan.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
                 <XAxis 
                   dataKey="bulan" 
-                  stroke="#9CA3AF"
+                  stroke="var(--chart-axis)"
                   tickFormatter={(val) => {
                     const [, month] = val.split('-')
                     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
                     return months[parseInt(month) - 1]
                   }}
                 />
-                <YAxis stroke="#9CA3AF" domain={[0, 100]} />
+                <YAxis stroke="var(--chart-axis)" domain={[0, 100]} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                  contentStyle={{ 
+                    backgroundColor: 'var(--tooltip-bg)', 
+                    border: '1px solid var(--tooltip-border)', 
+                    borderRadius: '8px', 
+                    color: 'var(--tooltip-text)' 
+                  }}
                   formatter={(value: any) => [`${value.toFixed(1)}%`, 'Kehadiran']}
                 />
                 <Legend />
@@ -348,16 +353,21 @@ export function AdminLaporanPage() {
           </div>
 
           {loadingJabatan ? (
-            <div className="h-80 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            <div className="h-80 bg-gray-300 dark:bg-gray-700 rounded-lg animate-pulse"></div>
           ) : statistikJabatan && statistikJabatan.data.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={statistikJabatan.data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="jabatan" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" domain={[0, 100]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+                  <XAxis dataKey="jabatan" stroke="var(--chart-axis)" />
+                  <YAxis stroke="var(--chart-axis)" domain={[0, 100]} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                    contentStyle={{ 
+                      backgroundColor: 'var(--tooltip-bg)', 
+                      border: '1px solid var(--tooltip-border)', 
+                      borderRadius: '8px', 
+                      color: 'var(--tooltip-text)' 
+                    }}
                   />
                   <Legend />
                   <Bar 
