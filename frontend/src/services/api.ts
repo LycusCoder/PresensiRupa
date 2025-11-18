@@ -5,7 +5,6 @@ import {
   TokenResponse, 
   Pengguna, 
   UpdateProfilRequest, 
-  CheckInRequest, 
   CheckInResponse, 
   AttendanceRecord,
   DashboardKaryawanStats,
@@ -110,11 +109,11 @@ class ApiService {
   }
 
   // ========== ATTENDANCE ==========
-  async checkIn(data: CheckInRequest): Promise<CheckInResponse> {
+  async checkIn(files: File[]): Promise<CheckInResponse> {
     const formData = new FormData()
-    formData.append('foto_1', data.foto_1)
-    formData.append('foto_2', data.foto_2)
-    formData.append('foto_3', data.foto_3)
+    files.forEach((file) => {
+      formData.append('files', file)
+    })
 
     const response = await this.client.post<CheckInResponse>('/absensi/cek-masuk', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
