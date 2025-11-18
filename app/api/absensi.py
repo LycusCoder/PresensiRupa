@@ -124,15 +124,19 @@ async def cek_masuk(
                 detail="Anda sudah absen hari ini!"
             )
         
-        # Ambil embedding induk dari DB
-        if not current_user.embedding_wajah:
+        # Ambil embedding induk dari DB dengan error handling yang lebih baik
+        try:
+            master_embedding_list = json.loads(current_user.embedding_wajah)
+            master_embedding = np.array(master_embedding_list)
+            # Pastikan array tidak kosong setelah di-load
+            if master_embedding.size == 0:
+                raise ValueError("Embedding array is empty after loading")
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            # Tangkap error jika embedding_wajah=None, "" (string kosong), atau JSON rusak
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Embedding wajah tidak ditemukan. Silakan daftar wajah terlebih dahulu."
+                detail=f"Data embedding wajah Anda rusak atau tidak valid. Silakan daftar wajah ulang di halaman profil. (Error: {e})"
             )
-        
-        master_embedding_list = json.loads(current_user.embedding_wajah)
-        master_embedding = np.array(master_embedding_list)
         
         # Baca 3 file foto
         list_file_bytes = []
@@ -172,9 +176,19 @@ async def cek_masuk(
         raise
     except Exception as e:
         db.rollback()
+        
+        # --- DEBUGGING CHANGE: Tampilkan Traceback & Error Type ---
+        import traceback
+        print("-" * 50)
+        print("CRITICAL ERROR DURING ABSENSI CHECK:")
+        traceback.print_exc() # Cetak stack trace lengkap ke backend log/terminal
+        print("-" * 50)
+        # --- END DEBUGGING CHANGE ---
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error cek absensi: {str(e)}"
+            # Tampilkan jenis error dan pesan di response body
+            detail=f"Error cek absensi: {type(e).__name__} - {str(e)}" 
         )
 
 
