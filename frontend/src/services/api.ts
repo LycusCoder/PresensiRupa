@@ -99,8 +99,8 @@ class ApiService {
 
   async registerFace(files: File[]): Promise<{ message: string }> {
     const formData = new FormData()
-    files.forEach((file, index) => {
-      formData.append(`foto_${index + 1}`, file)
+    files.forEach((file) => {
+      formData.append('files', file)
     })
 
     const response = await this.client.post<{ message: string }>('/profil/daftar-wajah', formData, {

@@ -11,7 +11,7 @@ export function FaceRegistrationPage() {
   
   // State management
   const [stream, setStream] = useState<MediaStream | null>(null)
-  const [capturedPhotos, setCapturedPhotos] = useState<string[]>([])
+  const [capturedPhotos, setCapturedPhotos] = useState<{ url: string; blob: Blob }[]>([])
   const [isCapturing, setIsCapturing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
@@ -39,12 +39,6 @@ export function FaceRegistrationPage() {
       })
       
       setStream(mediaStream)
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-        videoRef.current.play()
-      }
-      
       setCurrentStep('capturing')
       toast.success('Kamera berhasil diaktifkan!')
     } catch (error) {
@@ -53,6 +47,16 @@ export function FaceRegistrationPage() {
       toast.error('Gagal mengakses kamera')
     }
   }
+
+  // Connect stream to video element when both are ready
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream
+      videoRef.current.play().catch(err => {
+        console.error('Error playing video:', err)
+      })
+    }
+  }, [stream])
 
   // Stop camera
   const stopCamera = () => {
@@ -94,7 +98,7 @@ export function FaceRegistrationPage() {
     canvas.toBlob((blob) => {
       if (blob) {
         const photoUrl = URL.createObjectURL(blob)
-        setCapturedPhotos(prev => [...prev, photoUrl])
+        setCapturedPhotos(prev => [...prev, { url: photoUrl, blob }])
         toast.success(`Foto ${capturedPhotos.length + 1} berhasil diambil!`)
       }
       setIsCapturing(false)
@@ -103,15 +107,12 @@ export function FaceRegistrationPage() {
 
   // Delete a captured photo
   const deletePhoto = (index: number) => {
+    const photoToDelete = capturedPhotos[index]
+    if (photoToDelete) {
+      URL.revokeObjectURL(photoToDelete.url)
+    }
     setCapturedPhotos(prev => prev.filter((_, i) => i !== index))
     toast.info('Foto dihapus')
-  }
-
-  // Convert dataURL to File
-  const dataURLtoFile = async (dataUrl: string, filename: string): Promise<File> => {
-    const res = await fetch(dataUrl)
-    const blob = await res.blob()
-    return new File([blob], filename, { type: 'image/jpeg' })
   }
 
   // Submit photos to API
@@ -124,11 +125,9 @@ export function FaceRegistrationPage() {
     setIsSubmitting(true)
 
     try {
-      // Convert all photos to File objects
-      const files = await Promise.all(
-        capturedPhotos.map((photoUrl, index) =>
-          dataURLtoFile(photoUrl, `foto_${index + 1}.jpg`)
-        )
+      // Convert blobs to File objects
+      const files = capturedPhotos.map((photo, index) => 
+        new File([photo.blob], `foto_${index + 1}.jpg`, { type: 'image/jpeg' })
       )
 
       // Call API
@@ -158,8 +157,8 @@ export function FaceRegistrationPage() {
   useEffect(() => {
     return () => {
       stopCamera()
-      // Cleanup blob URLs
-      capturedPhotos.forEach(url => URL.revokeObjectURL(url))
+      // Cleanup all blob URLs
+      capturedPhotos.forEach(photo => URL.revokeObjectURL(photo.url))
     }
   }, [])
 
@@ -388,7 +387,7 @@ export function FaceRegistrationPage() {
                   {capturedPhotos.map((photo, index) => (
                     <div key={index} className="relative group">
                       <img
-                        src={photo}
+                        src={photo.url}
                         alt={`Foto ${index + 1}`}
                         className="w-full aspect-square object-cover rounded-lg"
                       />
