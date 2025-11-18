@@ -57,7 +57,7 @@ export function AppRoutes() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profil" element={<MaintenancePage title="Profil Saya" description="Halaman profil sedang dalam pengembangan. Anda akan dapat mengelola profil pribadi Anda di sini." />} />
           <Route path="absen" element={<MaintenancePage title="Absen Hari Ini" description="Fitur absensi dengan pengenalan wajah akan segera hadir!" />} />
-          <Route path="daftar-wajah" element={<MaintenancePage title="Daftar Wajah" description="Halaman untuk mendaftarkan data wajah Anda sedang dalam pengembangan." />} />
+          <Route path="daftar-wajah" element={<FaceRegistrationPage />} />
           <Route path="riwayat" element={<MaintenancePage title="Riwayat Absensi" description="Anda akan dapat melihat riwayat kehadiran lengkap Anda di halaman ini." />} />
           <Route path="notifikasi" element={<MaintenancePage title="Notifikasi" description="Pusat notifikasi untuk semua update penting akan segera tersedia." />} />
           <Route path="bantuan" element={<MaintenancePage title="Bantuan" description="Pusat bantuan dan dokumentasi sedang dalam persiapan." />} />
