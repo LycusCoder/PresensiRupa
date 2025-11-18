@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Camera, Check, X, Loader2, Clock, CheckCircle2, AlertTriangle, Scan, RefreshCw } from 'lucide-react'
+import { Camera, Check, X, Loader2, Clock, CheckCircle2, AlertTriangle, Scan } from 'lucide-react'
 import { apiService } from '@/services/api'
+import * as faceapi from 'face-api.js'
 
 export function CheckInPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const detectionCanvasRef = useRef<HTMLCanvasElement>(null)
   
   // State management
   const [stream, setStream] = useState<MediaStream | null>(null)
@@ -13,14 +15,16 @@ export function CheckInPage() {
   const [isCapturing, setIsCapturing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  const [currentStep, setCurrentStep] = useState<'init' | 'capturing' | 'verifying' | 'success'>('init')
+  const [currentStep, setCurrentStep] = useState<'init' | 'loading-model' | 'capturing' | 'verifying' | 'success'>('init')
   const [checkInResult, setCheckInResult] = useState<{ status: string; pesan: string } | null>(null)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [faceDetected, setFaceDetected] = useState(false)
+  const [faceConfidence, setFaceConfidence] = useState<number>(0)
   const [verificationStatus, setVerificationStatus] = useState<string>('Menunggu wajah...')
-  const autoCaptureTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const isTimerActiveRef = useRef<boolean>(false)
-  const photoCountRef = useRef<number>(0)  // Track photo count untuk avoid closure issue
+  const [modelLoaded, setModelLoaded] = useState(false)
+  
+  const detectionIntervalRef = useRef<number | null>(null)
+  const isProcessingRef = useRef(false)
 
   // Update current time every second
   useEffect(() => {
@@ -30,8 +34,37 @@ export function CheckInPage() {
     return () => clearInterval(timer)
   }, [])
 
+  // Load face-api.js models
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        console.log('🔄 Loading face detection model...')
+        setCurrentStep('loading-model')
+        
+        // Load TinyFaceDetector model dari public/models
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/models')
+        
+        setModelLoaded(true)
+        console.log('✅ Face detection model loaded!')
+        toast.success('Model deteksi wajah berhasil dimuat')
+        setCurrentStep('init')
+      } catch (error) {
+        console.error('❌ Error loading models:', error)
+        toast.error('Gagal memuat model deteksi wajah')
+        setCameraError('Gagal memuat model deteksi wajah. Refresh halaman.')
+      }
+    }
+
+    loadModels()
+  }, [])
+
   // Start camera
   const startCamera = async () => {
+    if (!modelLoaded) {
+      toast.error('Model belum dimuat. Mohon tunggu...')
+      return
+    }
+
     try {
       setCameraError(null)
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -63,60 +96,109 @@ export function CheckInPage() {
     }
   }, [stream])
 
-  // Real-time face detection & auto-capture
+  // Real-time face detection with face-api.js
   useEffect(() => {
-    if (!stream || !videoRef.current || currentStep !== 'capturing') return
+    if (!stream || !videoRef.current || currentStep !== 'capturing' || !modelLoaded) return
 
-    const interval = setInterval(() => {
-      const video = videoRef.current
-      if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
-        setFaceDetected(false)
-        setVerificationStatus('Menunggu video siap...')
+    const video = videoRef.current
+    const detectionCanvas = detectionCanvasRef.current
+
+    // Wait for video to be ready
+    const startDetection = () => {
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+        setTimeout(startDetection, 100)
         return
       }
 
-      // Simple detection: check if video has actual content
-      const isReady = video.videoWidth > 0 && video.videoHeight > 0
-      setFaceDetected(isReady)
+      console.log('🎥 Starting face detection loop...')
 
-      if (isReady) {
-        setVerificationStatus('✓ Wajah terdeteksi! Sedang verifikasi...')
-        
-        // Auto-capture HANYA foto pertama (foto 2 & 3 akan di-chain dari blob callback)
-        if (capturedPhotos.length === 0 && !isTimerActiveRef.current && !isCapturing) {
-          console.log('⏱️ Setting initial capture timer for photo 1...')
-          // Set flag to prevent re-setting timer
-          isTimerActiveRef.current = true
-          
-          // Start auto-capture after 1.5 seconds
-          autoCaptureTimerRef.current = setTimeout(() => {
-            console.log('⏰ Initial timer fired! Calling capturePhoto for photo 1...')
-            capturePhoto()
-            // Flag akan di-reset di blob callback untuk chaining
-          }, 1500)
-        } else if (capturedPhotos.length >= 3) {
-          console.log('✅ All 3 photos captured! Stopping auto-capture.')
-        }
-      } else {
-        setVerificationStatus('Menunggu wajah terdeteksi...')
-        // Reset timer if face is lost
-        if (autoCaptureTimerRef.current) {
-          clearTimeout(autoCaptureTimerRef.current)
-          autoCaptureTimerRef.current = null
-          isTimerActiveRef.current = false
-        }
+      // Setup canvas untuk overlay
+      if (detectionCanvas) {
+        detectionCanvas.width = video.videoWidth
+        detectionCanvas.height = video.videoHeight
       }
-    }, 500)
 
-    return () => {
-      clearInterval(interval)
-      if (autoCaptureTimerRef.current) {
-        clearTimeout(autoCaptureTimerRef.current)
-        autoCaptureTimerRef.current = null
-      }
-      isTimerActiveRef.current = false
+      // Detection loop setiap 300ms
+      detectionIntervalRef.current = window.setInterval(async () => {
+        if (isProcessingRef.current || capturedPhotos.length >= 3) return
+
+        try {
+          // Detect faces dengan TinyFaceDetector
+          const detection = await faceapi.detectSingleFace(
+            video, 
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 416,
+              scoreThreshold: 0.5
+            })
+          )
+
+          if (detection) {
+            const confidence = detection.score
+            setFaceDetected(true)
+            setFaceConfidence(confidence)
+            setVerificationStatus(`✓ Wajah terdeteksi! (${Math.round(confidence * 100)}%)`)
+
+            // Draw detection box
+            if (detectionCanvas) {
+              const ctx = detectionCanvas.getContext('2d')
+              if (ctx) {
+                ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height)
+                
+                // Draw bounding box
+                const box = detection.box
+                ctx.strokeStyle = '#10b981' // green-500
+                ctx.lineWidth = 3
+                ctx.strokeRect(box.x, box.y, box.width, box.height)
+                
+                // Draw confidence score
+                ctx.fillStyle = '#10b981'
+                ctx.font = '16px sans-serif'
+                ctx.fillText(
+                  `${Math.round(confidence * 100)}%`, 
+                  box.x, 
+                  box.y - 10
+                )
+              }
+            }
+
+            // Auto-capture jika confidence tinggi dan belum 3 foto
+            if (confidence > 0.7 && capturedPhotos.length < 3 && !isCapturing) {
+              console.log(`📸 High confidence (${Math.round(confidence * 100)}%), capturing photo ${capturedPhotos.length + 1}/3...`)
+              await capturePhoto()
+              
+              // Delay sebentar sebelum capture foto berikutnya (biar user bisa gerak dikit)
+              if (capturedPhotos.length < 2) {
+                await new Promise(resolve => setTimeout(resolve, 1500))
+              }
+            }
+          } else {
+            setFaceDetected(false)
+            setFaceConfidence(0)
+            setVerificationStatus('❌ Tidak ada wajah terdeteksi')
+            
+            // Clear canvas
+            if (detectionCanvas) {
+              const ctx = detectionCanvas.getContext('2d')
+              if (ctx) {
+                ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height)
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error detecting face:', error)
+        }
+      }, 300)
     }
-  }, [stream, currentStep, capturedPhotos.length])
+
+    startDetection()
+
+    // Cleanup
+    return () => {
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current)
+      }
+    }
+  }, [stream, currentStep, modelLoaded, capturedPhotos.length, isCapturing])
 
   // Stop camera
   const stopCamera = () => {
@@ -127,36 +209,18 @@ export function CheckInPage() {
     if (videoRef.current) {
       videoRef.current.srcObject = null
     }
-    if (autoCaptureTimerRef.current) {
-      clearTimeout(autoCaptureTimerRef.current)
-      autoCaptureTimerRef.current = null
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current)
     }
-    isTimerActiveRef.current = false
   }
 
   // Capture photo from video stream
-  const capturePhoto = () => {
-    console.log('🎥 capturePhoto called!', { 
-      hasVideo: !!videoRef.current, 
-      hasCanvas: !!canvasRef.current, 
-      photoCountState: capturedPhotos.length,
-      photoCountRef: photoCountRef.current,
-      isCapturing 
-    })
-    
-    // Use ref untuk check, bukan state (avoid closure issue)
-    if (!videoRef.current || !canvasRef.current || photoCountRef.current >= 3 || isCapturing) {
-      console.log('❌ Capture blocked:', { 
-        hasVideo: !!videoRef.current, 
-        hasCanvas: !!canvasRef.current, 
-        photoCountState: capturedPhotos.length,
-        photoCountRef: photoCountRef.current,
-        isCapturing 
-      })
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current || capturedPhotos.length >= 3 || isCapturing) {
       return
     }
 
-    console.log('✅ Starting capture...')
+    isProcessingRef.current = true
     setIsCapturing(true)
 
     const video = videoRef.current
@@ -166,6 +230,7 @@ export function CheckInPage() {
     if (!context) {
       toast.error('Gagal mengambil foto')
       setIsCapturing(false)
+      isProcessingRef.current = false
       return
     }
 
@@ -177,46 +242,36 @@ export function CheckInPage() {
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
     // Convert to blob
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const photoUrl = URL.createObjectURL(blob)
-        const newPhotos = [...capturedPhotos, { url: photoUrl, blob }]
-        setCapturedPhotos(newPhotos)
-        
-        // Update ref untuk avoid closure issue
-        photoCountRef.current = newPhotos.length
-        
-        const photoNum = newPhotos.length
-        console.log(`✅ Foto ${photoNum}/3 captured successfully! (ref: ${photoCountRef.current})`)
-        toast.success(`Foto ${photoNum}/3 berhasil diambil!`)
-        
-        // CHAINING LOGIC: Set timer untuk foto berikutnya
-        if (newPhotos.length < 3) {
-          console.log(`⏱️ Chaining capture... Setting timer for photo ${newPhotos.length + 1}`)
-          console.log(`📊 State before timer: photoCountRef=${photoCountRef.current}, isTimerActive=${isTimerActiveRef.current}`)
-          isTimerActiveRef.current = true
-          autoCaptureTimerRef.current = setTimeout(() => {
-            console.log(`⏰ Chained timer fired for photo ${photoCountRef.current + 1}!`)
-            console.log(`📊 State when timer fired: photoCountRef=${photoCountRef.current}, isCapturing=${isCapturing}`)
-            capturePhoto()
-            isTimerActiveRef.current = false
-          }, 1500)
-        } else {
+    return new Promise<void>((resolve) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const photoUrl = URL.createObjectURL(blob)
+          const newPhotos = [...capturedPhotos, { url: photoUrl, blob }]
+          setCapturedPhotos(newPhotos)
+          
+          const photoNum = newPhotos.length
+          console.log(`✅ Foto ${photoNum}/3 berhasil diambil!`)
+          toast.success(`Foto ${photoNum}/3 berhasil diambil!`)
+          
           // Jika sudah 3 foto, auto-submit
-          console.log('✅ 3 Foto lengkap! Auto-submit...')
-          setVerificationStatus('✓ 3 Foto lengkap! Sedang verifikasi...')
-          stopCamera()
-          setCurrentStep('verifying')
-          // Auto-submit setelah 1 detik
-          setTimeout(() => {
-            autoSubmit(newPhotos)
-          }, 1000)
+          if (newPhotos.length === 3) {
+            console.log('✅ 3 Foto lengkap! Auto-submit...')
+            setVerificationStatus('✓ 3 Foto lengkap! Sedang verifikasi...')
+            stopCamera()
+            setCurrentStep('verifying')
+            // Auto-submit setelah 1 detik
+            setTimeout(() => {
+              autoSubmit(newPhotos)
+            }, 1000)
+          }
+        } else {
+          console.error('❌ Failed to create blob from canvas')
         }
-      } else {
-        console.error('❌ Failed to create blob from canvas')
-      }
-      setIsCapturing(false)
-    }, 'image/jpeg', 0.9)
+        setIsCapturing(false)
+        isProcessingRef.current = false
+        resolve()
+      }, 'image/jpeg', 0.9)
+    })
   }
 
   // Auto-submit 3 photos to backend
@@ -261,9 +316,10 @@ export function CheckInPage() {
     // Cleanup blob URLs
     capturedPhotos.forEach(photo => URL.revokeObjectURL(photo.url))
     setCapturedPhotos([])
-    photoCountRef.current = 0  // Reset ref
     setCurrentStep('init')
     setCheckInResult(null)
+    setFaceDetected(false)
+    setFaceConfidence(0)
     toast.info('Silakan coba absen lagi.')
   }
 
@@ -275,6 +331,23 @@ export function CheckInPage() {
       capturedPhotos.forEach(photo => URL.revokeObjectURL(photo.url))
     }
   }, [capturedPhotos])
+
+  // Loading model view
+  if (currentStep === 'loading-model') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+        <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+          <Loader2 className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Memuat Model Deteksi Wajah...
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Mohon tunggu sebentar, sistem sedang mempersiapkan deteksi wajah otomatis
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   // Success view
   if (currentStep === 'success' && checkInResult?.status === 'sukses') {
@@ -353,7 +426,7 @@ export function CheckInPage() {
             Absen Hari Ini
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Lakukan absensi dengan pengenalan wajah otomatis. Sistem akan mencocokkan wajah Anda dengan data yang terdaftar.
+            Sistem akan otomatis mendeteksi wajah Anda dan mengambil 3 foto untuk verifikasi. Pastikan wajah Anda terlihat jelas.
           </p>
           
           {/* Current Time Display */}
@@ -385,170 +458,68 @@ export function CheckInPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Absensi setelah jam 09:00 dihitung terlambat</span>
+                  <span>Sistem otomatis mendeteksi wajah dengan AI</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Pastikan wajah terlihat jelas dan tidak tertutup</span>
+                  <span>3 foto akan diambil otomatis saat wajah terdeteksi</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Gunakan pencahayaan yang cukup</span>
+                  <span>Verifikasi 2-dari-3 foto untuk keamanan</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span><strong>3 foto wajah terbaik</strong> akan otomatis diambil dari video stream</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Sistem verifikasi <strong>2 dari 3 foto</strong> harus cocok untuk absen berhasil</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Hanya wajah yang terdaftar di akun Anda yang bisa digunakan</span>
+                  <span>Pastikan pencahayaan cukup dan wajah jelas</span>
                 </li>
               </ul>
             </div>
 
-            {/* Guide Card - Dynamic based on current step */}
+            {/* Guide Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Cara Menggunakan
               </h3>
               <div className="space-y-3">
-                {/* Step 1 - Aktifkan Kamera */}
                 <div className={`flex items-start gap-3 p-3 rounded-lg ${
-                  currentStep === 'init' 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500' 
-                    : 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
+                  currentStep === 'init' ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-700/50'
                 }`}>
-                  <div className={`w-8 h-8 rounded-full ${
-                    currentStep === 'init' ? 'bg-blue-600' : 'bg-green-600'
-                  } text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold`}>
-                    {currentStep === 'init' ? '1' : '✓'}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold ${
+                    currentStep === 'init' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'
+                  }`}>
+                    {currentStep !== 'init' ? '✓' : '1'}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">
-                      {currentStep === 'init' ? '👉 Aktifkan Kamera' : '✅ Kamera Aktif'}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {currentStep === 'init' 
-                        ? 'Klik tombol "Mulai Absen Sekarang" di sebelah kanan' 
-                        : 'Kamera berhasil diaktifkan!'}
-                    </p>
+                    <p className="font-medium text-sm text-gray-900 dark:text-white">Aktifkan Kamera</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Klik tombol di sebelah kanan</p>
                   </div>
                 </div>
 
-                {/* Step 2 - Posisikan Wajah */}
                 <div className={`flex items-start gap-3 p-3 rounded-lg ${
-                  currentStep === 'capturing' && capturedPhotos.length === 0
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500' 
-                    : currentStep === 'init'
-                    ? 'bg-gray-50 dark:bg-gray-700/50'
-                    : 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
+                  currentStep === 'capturing' ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-700/50'
                 }`}>
-                  <div className={`w-8 h-8 rounded-full ${
-                    currentStep === 'capturing' && capturedPhotos.length === 0
-                      ? 'bg-blue-600' 
-                      : currentStep === 'init'
-                      ? 'bg-gray-600'
-                      : 'bg-green-600'
-                  } text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold`}>
-                    {currentStep === 'init' 
-                      ? '2' 
-                      : (currentStep === 'capturing' && capturedPhotos.length === 0)
-                      ? '2'
-                      : '✓'}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold ${
+                    currentStep === 'capturing' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'
+                  }`}>
+                    {currentStep === 'verifying' || currentStep === 'success' ? '✓' : '2'}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">
-                      {(currentStep === 'capturing' && capturedPhotos.length === 0)
-                        ? '👉 Posisikan Wajah' 
-                        : currentStep === 'init'
-                        ? 'Posisikan Wajah'
-                        : '✅ Wajah Terdeteksi'}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {(currentStep === 'capturing' && capturedPhotos.length === 0)
-                        ? 'Lihat langsung ke kamera, posisikan wajah di lingkaran hijau' 
-                        : currentStep === 'init'
-                        ? 'Lihat langsung ke kamera, wajah menghadap depan'
-                        : 'Wajah sudah terdeteksi dengan baik!'}
-                    </p>
+                    <p className="font-medium text-sm text-gray-900 dark:text-white">AI Deteksi Wajah</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Sistem otomatis mendeteksi wajah Anda</p>
                   </div>
                 </div>
 
-                {/* Step 3 - Auto-Capture 3 Foto */}
                 <div className={`flex items-start gap-3 p-3 rounded-lg ${
-                  currentStep === 'capturing' && capturedPhotos.length > 0 && capturedPhotos.length < 3
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 animate-pulse' 
-                    : (currentStep === 'verifying' || currentStep === 'success')
-                    ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
-                    : 'bg-gray-50 dark:bg-gray-700/50'
+                  currentStep === 'verifying' ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-700/50'
                 }`}>
-                  <div className={`w-8 h-8 rounded-full ${
-                    currentStep === 'capturing' && capturedPhotos.length > 0 && capturedPhotos.length < 3
-                      ? 'bg-blue-600' 
-                      : (currentStep === 'verifying' || currentStep === 'success')
-                      ? 'bg-green-600'
-                      : 'bg-gray-600'
-                  } text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold`}>
-                    {(currentStep === 'verifying' || currentStep === 'success')
-                      ? '✓'
-                      : currentStep === 'capturing' && capturedPhotos.length > 0
-                      ? capturedPhotos.length
-                      : '3'}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold ${
+                    currentStep === 'verifying' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'
+                  }`}>
+                    {currentStep === 'success' ? '✓' : '3'}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">
-                      {currentStep === 'capturing' && capturedPhotos.length > 0 && capturedPhotos.length < 3
-                        ? `👉 Mengambil Foto (${capturedPhotos.length}/3)...` 
-                        : (currentStep === 'verifying' || currentStep === 'success')
-                        ? '✅ 3 Foto Lengkap'
-                        : 'Auto-Capture 3 Foto'}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {currentStep === 'capturing' && capturedPhotos.length > 0 && capturedPhotos.length < 3
-                        ? 'Sistem sedang mengambil foto secara otomatis...' 
-                        : (currentStep === 'verifying' || currentStep === 'success')
-                        ? '3 foto berhasil diambil!'
-                        : 'Sistem otomatis ambil 3 foto terbaik dari video stream'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 4 - Verifikasi Otomatis */}
-                <div className={`flex items-start gap-3 p-3 rounded-lg ${
-                  currentStep === 'verifying'
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 animate-pulse' 
-                    : currentStep === 'success'
-                    ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
-                    : 'bg-gray-50 dark:bg-gray-700/50'
-                }`}>
-                  <div className={`w-8 h-8 rounded-full ${
-                    currentStep === 'verifying'
-                      ? 'bg-blue-600' 
-                      : currentStep === 'success'
-                      ? 'bg-green-600'
-                      : 'bg-gray-600'
-                  } text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold`}>
-                    {currentStep === 'success' ? '✓' : '4'}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">
-                      {currentStep === 'verifying'
-                        ? '👉 Memverifikasi Wajah...' 
-                        : currentStep === 'success'
-                        ? '✅ Absen Berhasil!'
-                        : 'Verifikasi Otomatis'}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {currentStep === 'verifying'
-                        ? 'Sistem sedang mencocokkan wajah dengan data terdaftar...' 
-                        : currentStep === 'success'
-                        ? 'Wajah cocok dan absen berhasil dicatat!'
-                        : 'Sistem otomatis verifikasi dan absen jika wajah cocok'}
-                    </p>
+                    <p className="font-medium text-sm text-gray-900 dark:text-white">Verifikasi Otomatis</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">3 foto otomatis, lalu verifikasi ke server</p>
                   </div>
                 </div>
               </div>
@@ -578,7 +549,7 @@ export function CheckInPage() {
                       </span>
                     </>
                   )}
-                  {currentStep === 'init' ? 'Mulai Kamera' : currentStep === 'verifying' ? 'Verifikasi Wajah' : 'Kamera Aktif'}
+                  {currentStep === 'init' ? 'Mulai Kamera' : currentStep === 'verifying' ? 'Verifikasi Wajah' : 'Deteksi Wajah AI'}
                 </h3>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Foto: {capturedPhotos.length}/3
@@ -598,7 +569,7 @@ export function CheckInPage() {
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                     <Camera className="w-16 h-16 mb-4 opacity-50" />
                     <p className="text-lg font-medium">Klik tombol di bawah untuk memulai</p>
-                    <p className="text-sm opacity-75 mt-2">Sistem akan otomatis mengambil 3 foto</p>
+                    <p className="text-sm opacity-75 mt-2">Sistem AI akan otomatis mendeteksi wajah Anda</p>
                   </div>
                 ) : currentStep === 'verifying' ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-gradient-to-br from-blue-900/90 to-blue-800/90">
@@ -615,19 +586,11 @@ export function CheckInPage() {
                       muted
                       className="w-full h-full object-cover"
                     />
-                    {/* Face Detection Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      {/* Face guide circle */}
-                      <div className={`w-64 h-64 rounded-full border-4 transition-colors ${
-                        faceDetected 
-                          ? 'border-green-500 shadow-lg shadow-green-500/50' 
-                          : 'border-yellow-500 shadow-lg shadow-yellow-500/50'
-                      }`}>
-                        {faceDetected && (
-                          <div className="absolute inset-0 rounded-full border-4 border-green-400 animate-ping" />
-                        )}
-                      </div>
-                    </div>
+                    {/* Detection overlay canvas */}
+                    <canvas
+                      ref={detectionCanvasRef}
+                      className="absolute inset-0 w-full h-full"
+                    />
                     {/* Status Overlay */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/75 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
                       <p className="text-sm font-medium flex items-center gap-2">
@@ -639,12 +602,12 @@ export function CheckInPage() {
                         ) : faceDetected ? (
                           <>
                             <Scan className="w-4 h-4 text-green-400" />
-                            {verificationStatus}
+                            Wajah terdeteksi {faceConfidence > 0 ? `(${Math.round(faceConfidence * 100)}%)` : ''}
                           </>
                         ) : (
                           <>
                             <Scan className="w-4 h-4 text-yellow-400" />
-                            Posisikan wajah Anda di lingkaran
+                            Mencari wajah...
                           </>
                         )}
                       </p>
@@ -667,11 +630,12 @@ export function CheckInPage() {
                 {currentStep === 'init' ? (
                   <button
                     onClick={startCamera}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                    disabled={!modelLoaded}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     data-testid="start-camera-btn"
                   >
                     <Camera className="w-5 h-5" />
-                    Mulai Absen Sekarang
+                    {modelLoaded ? 'Mulai Absen Sekarang' : 'Memuat Model...'}
                   </button>
                 ) : currentStep === 'capturing' ? (
                   <button
