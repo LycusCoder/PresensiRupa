@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { toast } from 'react-toastify'
-import { Camera, Check, X, Loader2, Clock, CheckCircle2, AlertTriangle, Scan, RefreshCw } from 'lucide-react'
+import { Camera, Check, X, Loader2, Clock, CheckCircle2, AlertTriangle, MapPin } from 'lucide-react'
 import { apiService } from '@/services/api'
 
 export function CheckInPage() {
@@ -13,12 +13,9 @@ export function CheckInPage() {
   const [isCapturing, setIsCapturing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  const [currentStep, setCurrentStep] = useState<'init' | 'capturing' | 'verifying' | 'success'>('init')
+  const [currentStep, setCurrentStep] = useState<'init' | 'capturing' | 'preview' | 'success'>('init')
   const [checkInResult, setCheckInResult] = useState<{ status: string; pesan: string } | null>(null)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [faceDetected, setFaceDetected] = useState(false)
-  const [verificationStatus, setVerificationStatus] = useState<string>('Menunggu wajah...')
-  const autoCaptureTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Update current time every second
   useEffect(() => {
@@ -27,6 +24,13 @@ export function CheckInPage() {
     }, 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // Camera positions guide (3 photos)
+  const photoGuides = [
+    { id: 1, label: 'Wajah Depan', description: 'Lihat langsung ke kamera' },
+    { id: 2, label: 'Sedikit Kanan', description: 'Putar kepala sedikit ke kanan' },
+    { id: 3, label: 'Sedikit Kiri', description: 'Putar kepala sedikit ke kiri' },
+  ]
 
   // Start camera
   const startCamera = async () => {
@@ -42,7 +46,7 @@ export function CheckInPage() {
       
       setStream(mediaStream)
       setCurrentStep('capturing')
-      toast.success('Kamera aktif! Posisikan wajah Anda...')
+      toast.success('Kamera berhasil diaktifkan!')
     } catch (error) {
       console.error('Error accessing camera:', error)
       setCameraError('Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.')
@@ -56,54 +60,9 @@ export function CheckInPage() {
       videoRef.current.srcObject = stream
       videoRef.current.play().catch(err => {
         console.error('Error playing video:', err)
-        toast.error('Gagal memutar video kamera')
       })
     }
   }, [stream])
-
-  // Real-time face detection & auto-capture
-  useEffect(() => {
-    if (!stream || !videoRef.current || currentStep !== 'capturing') return
-
-    const interval = setInterval(() => {
-      const video = videoRef.current
-      if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
-        setFaceDetected(false)
-        setVerificationStatus('Menunggu video siap...')
-        return
-      }
-
-      // Simple detection: check if video has actual content
-      const isReady = video.videoWidth > 0 && video.videoHeight > 0
-      setFaceDetected(isReady)
-
-      if (isReady) {
-        setVerificationStatus('✓ Wajah terdeteksi! Sedang verifikasi...')
-        
-        // Auto-capture 3 foto secara otomatis
-        if (capturedPhotos.length < 3 && !isCapturing) {
-          // Clear previous timer
-          if (autoCaptureTimerRef.current) {
-            clearTimeout(autoCaptureTimerRef.current)
-          }
-          
-          // Start auto-capture after 1.5 seconds
-          autoCaptureTimerRef.current = setTimeout(() => {
-            capturePhoto()
-          }, 1500)
-        }
-      } else {
-        setVerificationStatus('Menunggu wajah terdeteksi...')
-      }
-    }, 500)
-
-    return () => {
-      clearInterval(interval)
-      if (autoCaptureTimerRef.current) {
-        clearTimeout(autoCaptureTimerRef.current)
-      }
-    }
-  }, [stream, currentStep, capturedPhotos.length, isCapturing])
 
   // Stop camera
   const stopCamera = () => {
@@ -113,9 +72,6 @@ export function CheckInPage() {
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null
-    }
-    if (autoCaptureTimerRef.current) {
-      clearTimeout(autoCaptureTimerRef.current)
     }
   }
 
@@ -148,72 +104,67 @@ export function CheckInPage() {
     canvas.toBlob((blob) => {
       if (blob) {
         const photoUrl = URL.createObjectURL(blob)
-        const newPhotos = [...capturedPhotos, { url: photoUrl, blob }]
-        setCapturedPhotos(newPhotos)
-        
-        const photoNum = newPhotos.length
-        toast.success(`Foto ${photoNum}/3 berhasil diambil!`)
-        
-        // Jika sudah 3 foto, auto-submit
-        if (newPhotos.length === 3) {
-          setVerificationStatus('✓ 3 Foto lengkap! Sedang verifikasi...')
-          stopCamera()
-          setCurrentStep('verifying')
-          // Auto-submit setelah 1 detik
-          setTimeout(() => {
-            autoSubmit(newPhotos)
-          }, 1000)
-        }
+        setCapturedPhotos(prev => [...prev, { url: photoUrl, blob }])
+        toast.success(`Foto ${capturedPhotos.length + 1} berhasil diambil!`)
       }
       setIsCapturing(false)
     }, 'image/jpeg', 0.9)
   }
 
-  // Auto-submit 3 photos to backend
-  const autoSubmit = async (photos: { url: string; blob: Blob }[]) => {
+  // Delete a captured photo
+  const deletePhoto = (index: number) => {
+    const photoToDelete = capturedPhotos[index]
+    if (photoToDelete) {
+      URL.revokeObjectURL(photoToDelete.url)
+    }
+    setCapturedPhotos(prev => prev.filter((_, i) => i !== index))
+    toast.info('Foto dihapus')
+  }
+
+  // Submit photos to API
+  const handleSubmit = async () => {
+    if (capturedPhotos.length !== 3) {
+      toast.error('Harap ambil 3 foto terlebih dahulu')
+      return
+    }
+
     setIsSubmitting(true)
-    setVerificationStatus('Memverifikasi wajah dengan sistem...')
 
     try {
       // Convert blobs to File objects
-      const files = photos.map((photo, index) => 
+      const files = capturedPhotos.map((photo, index) => 
         new File([photo.blob], `foto_${index + 1}.jpg`, { type: 'image/jpeg' })
       )
 
-      // Call API with 3 files
+      // Call API
       const response = await apiService.checkIn(files)
       
       setCheckInResult(response)
       
       if (response.status === 'sukses') {
-        toast.success(response.pesan || 'Absen berhasil! Wajah Anda cocok.')
+        toast.success(response.pesan || 'Absen berhasil!')
         setCurrentStep('success')
       } else {
-        toast.error(response.pesan || 'Wajah tidak cocok dengan data yang terdaftar. Coba lagi.')
+        toast.error(response.pesan || 'Wajah tidak cocok. Coba lagi.')
         // Reset untuk coba lagi
-        resetAndRetry()
+        setCapturedPhotos([])
+        capturedPhotos.forEach(photo => URL.revokeObjectURL(photo.url))
       }
+      
+      // Stop camera
+      stopCamera()
       
     } catch (error: any) {
       console.error('Error submitting check-in:', error)
-      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Gagal melakukan absen. Silakan coba lagi.'
+      const errorMessage = error.response?.data?.detail || 'Gagal melakukan absen'
       toast.error(errorMessage)
       
       // Reset untuk coba lagi
-      resetAndRetry()
+      setCapturedPhotos([])
+      capturedPhotos.forEach(photo => URL.revokeObjectURL(photo.url))
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  // Reset and retry
-  const resetAndRetry = () => {
-    // Cleanup blob URLs
-    capturedPhotos.forEach(photo => URL.revokeObjectURL(photo.url))
-    setCapturedPhotos([])
-    setCurrentStep('init')
-    setCheckInResult(null)
-    toast.info('Silakan coba absen lagi.')
   }
 
   // Cleanup on unmount
@@ -223,7 +174,7 @@ export function CheckInPage() {
       // Cleanup all blob URLs
       capturedPhotos.forEach(photo => URL.revokeObjectURL(photo.url))
     }
-  }, [capturedPhotos])
+  }, [])
 
   // Success view
   if (currentStep === 'success' && checkInResult?.status === 'sukses') {
@@ -281,7 +232,7 @@ export function CheckInPage() {
                 }}
                 className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-all"
               >
-                Kembali
+                Kembali ke Dashboard
               </button>
             </div>
           </div>
@@ -292,7 +243,7 @@ export function CheckInPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-500 rounded-full mb-4">
@@ -302,7 +253,7 @@ export function CheckInPage() {
             Absen Hari Ini
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Lakukan absensi dengan pengenalan wajah otomatis. Sistem akan mencocokkan wajah Anda dengan data yang terdaftar.
+            Lakukan absensi dengan pengenalan wajah. Ambil 3 foto wajah untuk verifikasi.
           </p>
           
           {/* Current Time Display */}
@@ -346,64 +297,47 @@ export function CheckInPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span><strong>3 foto wajah terbaik</strong> akan otomatis diambil dari video stream</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Sistem verifikasi <strong>2 dari 3 foto</strong> harus cocok untuk absen berhasil</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Hanya wajah yang terdaftar di akun Anda yang bisa digunakan</span>
+                  <span>3 foto diperlukan untuk verifikasi (2 dari 3 harus cocok)</span>
                 </li>
               </ul>
             </div>
 
-            {/* Guide Card */}
+            {/* Photo Guide */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Cara Menggunakan
+                Panduan Posisi Foto
               </h3>
               <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold">
-                    1
+                {photoGuides.map((guide, index) => (
+                  <div
+                    key={guide.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                      capturedPhotos.length === index
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white'
+                        : capturedPhotos.length > index
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                        : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        capturedPhotos.length > index
+                          ? 'bg-green-600 text-white'
+                          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      {capturedPhotos.length > index ? (
+                        <Check className="w-5 h-5" />
+                      ) : (
+                        <span className="text-sm font-semibold">{guide.id}</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{guide.label}</p>
+                      <p className="text-xs opacity-90">{guide.description}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">Aktifkan Kamera</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Klik tombol "Aktifkan Kamera" di sebelah kanan</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                  <div className="w-8 h-8 rounded-full bg-gray-600 text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold">
-                    2
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">Posisikan Wajah</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Lihat langsung ke kamera, wajah menghadap depan</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                  <div className="w-8 h-8 rounded-full bg-gray-600 text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold">
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">Auto-Capture 3 Foto</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Sistem otomatis ambil 3 foto terbaik dari video stream</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                  <div className="w-8 h-8 rounded-full bg-gray-600 text-white flex items-center justify-center flex-shrink-0 text-sm font-semibold">
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-gray-900 dark:text-white">Verifikasi Otomatis</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Sistem otomatis verifikasi dan absen jika wajah cocok</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
@@ -413,25 +347,8 @@ export function CheckInPage() {
             {/* Camera View */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  {currentStep === 'init' && <Camera className="w-5 h-5 text-blue-600" />}
-                  {currentStep === 'capturing' && (
-                    <>
-                      <Scan className={`w-5 h-5 ${faceDetected ? 'text-green-600' : 'text-yellow-600'}`} />
-                      <span className={`text-sm font-medium ${faceDetected ? 'text-green-600' : 'text-yellow-600'}`}>
-                        {verificationStatus}
-                      </span>
-                    </>
-                  )}
-                  {currentStep === 'verifying' && (
-                    <>
-                      <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-                      <span className="text-sm font-medium text-blue-600">
-                        Memverifikasi wajah...
-                      </span>
-                    </>
-                  )}
-                  {currentStep === 'init' ? 'Mulai Kamera' : currentStep === 'verifying' ? 'Verifikasi Wajah' : 'Kamera Aktif'}
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {currentStep === 'init' ? 'Mulai Kamera' : 'Kamera Aktif'}
                 </h3>
                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Foto: {capturedPhotos.length}/3
@@ -445,19 +362,12 @@ export function CheckInPage() {
                 </div>
               )}
 
-              {/* Video/Photo Preview */}
+              {/* Video Preview */}
               <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden mb-4">
                 {currentStep === 'init' ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                     <Camera className="w-16 h-16 mb-4 opacity-50" />
-                    <p className="text-lg font-medium">Klik tombol di bawah untuk memulai</p>
-                    <p className="text-sm opacity-75 mt-2">Sistem akan otomatis mengambil 3 foto</p>
-                  </div>
-                ) : currentStep === 'verifying' ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-gradient-to-br from-blue-900/90 to-blue-800/90">
-                    <Loader2 className="w-16 h-16 mb-4 animate-spin" />
-                    <p className="text-lg font-medium">Memverifikasi Wajah...</p>
-                    <p className="text-sm opacity-75 mt-2">Mohon tunggu sebentar</p>
+                    <p className="text-lg font-medium">Klik tombol di bawah untuk memulai kamera</p>
                   </div>
                 ) : (
                   <>
@@ -468,46 +378,17 @@ export function CheckInPage() {
                       muted
                       className="w-full h-full object-cover"
                     />
-                    {/* Face Detection Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      {/* Face guide circle */}
-                      <div className={`w-64 h-64 rounded-full border-4 transition-colors ${
-                        faceDetected 
-                          ? 'border-green-500 shadow-lg shadow-green-500/50' 
-                          : 'border-yellow-500 shadow-lg shadow-yellow-500/50'
-                      }`}>
-                        {faceDetected && (
-                          <div className="absolute inset-0 rounded-full border-4 border-green-400 animate-ping" />
-                        )}
+                    {/* Current Guide Overlay */}
+                    {capturedPhotos.length < 3 && (
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/75 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+                        <p className="text-sm font-medium">
+                          {photoGuides[capturedPhotos.length].label}
+                        </p>
+                        <p className="text-xs opacity-90">
+                          {photoGuides[capturedPhotos.length].description}
+                        </p>
                       </div>
-                    </div>
-                    {/* Status Overlay */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/75 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
-                      <p className="text-sm font-medium flex items-center gap-2">
-                        {isCapturing ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Mengambil foto {capturedPhotos.length + 1}/3...
-                          </>
-                        ) : faceDetected ? (
-                          <>
-                            <Scan className="w-4 h-4 text-green-400" />
-                            {verificationStatus}
-                          </>
-                        ) : (
-                          <>
-                            <Scan className="w-4 h-4 text-yellow-400" />
-                            Posisikan wajah Anda di lingkaran
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    {/* Photo Counter */}
-                    <div className="absolute top-4 right-4 bg-black/75 text-white px-3 py-2 rounded-lg backdrop-blur-sm">
-                      <p className="text-sm font-bold">
-                        {capturedPhotos.length}/3 Foto
-                      </p>
-                    </div>
+                    )}
                   </>
                 )}
               </div>
@@ -524,48 +405,68 @@ export function CheckInPage() {
                     data-testid="start-camera-btn"
                   >
                     <Camera className="w-5 h-5" />
-                    Mulai Absen Sekarang
+                    Aktifkan Kamera
                   </button>
-                ) : currentStep === 'capturing' ? (
-                  <button
-                    onClick={() => {
-                      stopCamera()
-                      resetAndRetry()
-                    }}
-                    className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-3 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-all flex items-center justify-center gap-2"
-                    data-testid="cancel-btn"
-                  >
-                    <X className="w-5 h-5" />
-                    Batalkan
-                  </button>
-                ) : currentStep === 'verifying' ? (
-                  <button
-                    disabled
-                    className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium opacity-75 cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Sedang Memverifikasi...
-                  </button>
-                ) : null}
+                ) : (
+                  <>
+                    <button
+                      onClick={capturePhoto}
+                      disabled={isCapturing || capturedPhotos.length >= 3}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      data-testid="capture-photo-btn"
+                    >
+                      {isCapturing ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Mengambil Foto...
+                        </>
+                      ) : capturedPhotos.length >= 3 ? (
+                        <>
+                          <Check className="w-5 h-5" />
+                          Semua Foto Lengkap
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5" />
+                          Ambil Foto ({capturedPhotos.length + 1}/3)
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={stopCamera}
+                      className="px-6 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-3 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
+                      data-testid="stop-camera-btn"
+                    >
+                      Hentikan
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Progress Info */}
-            {(currentStep === 'capturing' || currentStep === 'verifying') && capturedPhotos.length > 0 && (
+            {/* Photo Preview Grid */}
+            {capturedPhotos.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Foto yang Diambil ({capturedPhotos.length}/3)
+                  Preview Foto
                 </h3>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   {capturedPhotos.map((photo, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                    <div key={index} className="relative group">
                       <img
                         src={photo.url}
                         alt={`Foto ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full aspect-square object-cover rounded-lg"
                       />
-                      <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded font-medium">
-                        ✓ #{index + 1}
+                      <button
+                        onClick={() => deletePhoto(index)}
+                        className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                        data-testid={`delete-photo-${index}-btn`}
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-black/75 text-white text-xs px-2 py-1 rounded">
+                        #{index + 1}
                       </div>
                     </div>
                   ))}
@@ -573,19 +474,32 @@ export function CheckInPage() {
                   {Array.from({ length: 3 - capturedPhotos.length }).map((_, index) => (
                     <div
                       key={`empty-${index}`}
-                      className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600"
+                      className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center"
                     >
                       <Camera className="w-8 h-8 text-gray-400" />
                     </div>
                   ))}
                 </div>
-                {currentStep === 'verifying' && (
-                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <p className="text-sm text-blue-800 dark:text-blue-300 text-center font-medium">
-                      Sedang memverifikasi wajah dengan sistem... Mohon tunggu
-                    </p>
-                  </div>
-                )}
+
+                {/* Submit Button */}
+                <button
+                  onClick={handleSubmit}
+                  disabled={capturedPhotos.length !== 3 || isSubmitting}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  data-testid="submit-checkin-btn"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Memverifikasi Wajah...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-5 h-5" />
+                      Lakukan Absen
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
