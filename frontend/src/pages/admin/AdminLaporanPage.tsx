@@ -31,7 +31,8 @@ import {
   RingkasanBulananResponse
 } from '@/types'
 
-export default function AdminLaporanPage() {
+// FIX: Mengubah dari export default function menjadi named export function
+export function AdminLaporanPage() {
   const navigate = useNavigate()
   
   // State untuk data
@@ -518,3 +519,5 @@ export default function AdminLaporanPage() {
     </div>
   )
 }
+
+export default AdminLaporanPage

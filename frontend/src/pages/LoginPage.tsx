@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,12 +20,26 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { setToken, setUser, setError } = useAuthStore()
+  const { setToken, setUser, setError, reset } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   })
+  
+  // Clear any stuck cache on component mount
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('clear_cache') === 'true') {
+      reset()
+      toast.info('Cache berhasil dibersihkan! Silakan login kembali.', {
+        position: 'top-right',
+        autoClose: 3000,
+      })
+      // Remove parameter from URL
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -174,7 +188,7 @@ export function LoginPage() {
             </div>
 
             {/* Footer */}
-            <div className="text-center">
+            <div className="text-center space-y-3">
               <p className="text-secondary-600 text-sm">
                 Belum punya akun?{' '}
                 <button
@@ -185,6 +199,21 @@ export function LoginPage() {
                   Daftar Sekarang
                 </button>
               </p>
+              
+              {/* Clear Cache Button - Untuk masalah redirect */}
+              <button
+                onClick={() => {
+                  reset()
+                  toast.success('Cache berhasil dibersihkan!', {
+                    position: 'top-right',
+                    autoClose: 2000,
+                  })
+                }}
+                className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                data-testid="clear-cache-btn"
+              >
+                Masalah Login? Klik di sini untuk reset cache
+              </button>
             </div>
           </div>
 

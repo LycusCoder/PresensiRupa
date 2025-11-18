@@ -50,7 +50,11 @@ export const useAuthStore = create<AuthState>()(persist(
       setError: (error: string | null) => set({ error }),
       
       logout: () => {
+        // Clear all auth-related data from localStorage
         localStorage.removeItem('token')
+        localStorage.removeItem('remember_me')
+        localStorage.removeItem('auth-store') // Clear zustand persist cache
+        
         set({ 
           token: null, 
           user: null, 
@@ -60,7 +64,11 @@ export const useAuthStore = create<AuthState>()(persist(
       },
       
       reset: () => {
+        // Clear ALL auth-related data including persist cache
         localStorage.removeItem('token')
+        localStorage.removeItem('remember_me')
+        localStorage.removeItem('auth-store') // Clear zustand persist cache
+        
         set({
           token: null,
           user: null,

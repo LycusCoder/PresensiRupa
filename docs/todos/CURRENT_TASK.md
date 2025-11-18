@@ -86,6 +86,28 @@ Memperbarui frontend PresensiRupa agar fully functional dan terintegrasi dengan 
 - [x] Halaman Pengaturan Admin lengkap
 - [x] Responsive & modern design
 - [x] All routes registered
+- [x] Fix cache login issue - Clear cache button & enhanced logout
+
+#### 2.7 Admin - Fix Light Mode Theme (UPCOMING) 🎨
+**Prioritas: MEDIUM**
+**Issue:** Light mode (Sun icon) masih menampilkan background gelap pada cards & sections
+**Target:** Konsistensi theme - Light = terang semua, Dark = gelap semua
+
+**Yang Perlu Diperbaiki:**
+- [ ] Fix AdminDashboardPage - Cards (Total Karyawan, Hadir Hari Ini, dll) masih gelap di light mode
+- [ ] Fix chart background & grid colors untuk light mode
+- [ ] Fix "Aktivitas Terbaru" section background
+- [ ] Fix "Aksi Cepat" cards background
+- [ ] Pastikan semua admin pages (Karyawan, Kehadiran, Laporan, Profil, Pengaturan) konsisten
+- [ ] Review & fix text colors untuk readability di light mode
+- [ ] Update color scheme:
+  - Light Mode: bg-white, bg-gray-50, text-gray-900, border-gray-200
+  - Dark Mode: bg-gray-800, bg-gray-900, text-white, border-gray-700 (sudah OK ✅)
+
+**Catatan:**
+- Dark mode sudah bagus dan tidak perlu perubahan
+- Focus pada light mode appearance saja
+- Jaga konsistensi design pattern yang sudah ada
 
 ---
 
@@ -270,12 +292,59 @@ GET    /admin/daftar-karyawan     - List all employees (requires admin role)
 
 ---
 
-## 🎯 STATUS: FASE 2.3 & 2.4 - Admin Kelola Karyawan & Kehadiran (SELESAI)
-**Current Focus**: Halaman admin untuk kelola karyawan dan kehadiran lengkap dengan CRUD operations
+## 🎯 STATUS: FASE 2.6 - ADMIN PANEL SELESAI! NEXT: FASE 2.7 - FIX LIGHT MODE THEME
+**Current Focus**: Fix Light Mode theme agar tidak ada background gelap pada cards & sections
 
 ---
 
 ## 📝 LOG PERUBAHAN TERAKHIR
+
+### Session: 17 Nov 2024 - UPDATE 7 (FIX CACHE LOGIN ISSUE - SELESAI! ✅)
+
+#### ✅ MASALAH CACHE LOGIN - FIXED
+
+**Issue:** User mengalami auto redirect dari `/masuk` ke `/admin/dashboard` karena cache login masih tersimpan di localStorage
+
+**Root Cause:**
+- Zustand persist middleware menyimpan auth state di localStorage dengan key `'auth-store'`
+- Logout function sebelumnya tidak membersihkan persist cache
+- PublicRoute mendeteksi user masih authenticated dan langsung redirect
+
+**Solutions Implemented:**
+
+**1. Enhanced Logout & Reset Functions** 🔧
+- **File:** `/app/frontend/src/stores/auth.ts`
+- **Fix:** Membersihkan ALL auth cache:
+  ```typescript
+  localStorage.removeItem('token')
+  localStorage.removeItem('remember_me')
+  localStorage.removeItem('auth-store') // ← KEY FIX!
+  ```
+
+**2. PublicRoute Enhancement** 🛣️
+- **File:** `/app/frontend/src/components/PublicRoute.tsx`
+- **Feature:** Dukungan parameter `?force_logout=true` untuk force clear cache
+- **Benefit:** Otomatis membersihkan cache jika user stuck
+
+**3. Clear Cache Button** 🆕
+- **File:** `/app/frontend/src/pages/LoginPage.tsx`
+- **Location:** Di footer login page (bawah "Belum punya akun?")
+- **Text:** "Masalah Login? Klik di sini untuk reset cache"
+- **Function:** User dapat self-service clear cache jika redirect loop
+
+**Testing:**
+- ✅ Logout dari admin dashboard → Kembali ke `/masuk` tanpa auto redirect
+- ✅ Clear cache button → Berhasil membersihkan semua auth state
+- ✅ Login ulang → Berjalan normal tanpa masalah
+
+#### 📂 Files Modified:
+```
+✅ /app/frontend/src/stores/auth.ts (Enhanced logout & reset)
+✅ /app/frontend/src/components/PublicRoute.tsx (Force logout support)
+✅ /app/frontend/src/pages/LoginPage.tsx (Clear cache button)
+```
+
+---
 
 ### Session: 17 Nov 2024 - UPDATE 6 (FASE 2.6 - THEME & UI ENHANCEMENT SELESAI! 🎨)
 
