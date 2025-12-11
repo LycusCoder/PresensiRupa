@@ -1,0 +1,56 @@
+<section id="page-laporan" class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
+  <div class="section-header">
+    <i class="fas fa-file-alt"></i>
+    <h3 class="text-2xl font-bold text-gray-900">Laporan Absensi</h3>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="bg-white border border-gray-200 rounded-2xl p-6">
+      <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <i class="fas fa-filter"></i>
+        Filter Laporan
+      </h4>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+          <input type="date" class="form-input w-full" id="filter-tanggal">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
+          <select class="form-input w-full" id="filter-kelas">
+            <option>Semua Kelas</option>
+            <option>Kelas A</option>
+            <option>Kelas B</option>
+          </select>
+        </div>
+        <button class="btn-primary w-full flex items-center justify-center gap-2">
+          <i class="fas fa-sync-alt"></i>
+          Generate Laporan
+        </button>
+      </div>
+    </div>
+    <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 border border-gray-200">
+      <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <i class="fas fa-eye"></i>
+        Preview Laporan
+      </h4>
+      <div class="space-y-4">
+        <div class="flex justify-between text-sm p-3 bg-white rounded-lg border">
+          <span class="text-gray-600">Total Sesi</span>
+          <span class="font-bold text-blue-700">24</span>
+        </div>
+        <div class="flex justify-between text-sm p-3 bg-white rounded-lg border">
+          <span class="text-gray-600">Rata-rata Kehadiran</span>
+          <span class="font-bold text-emerald-700">87%</span>
+        </div>
+        <div class="flex justify-between text-sm p-3 bg-white rounded-lg border">
+          <span class="text-gray-600">Mahasiswa Hadir</span>
+          <span class="font-bold text-amber-700">118/124</span>
+        </div>
+      </div>
+      <button class="btn-primary w-full mt-6 flex items-center justify-center gap-2">
+        <i class="fas fa-download"></i>
+        Unduh PDF
+      </button>
+    </div>
+  </div>
+</section>

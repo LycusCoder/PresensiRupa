@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Smart Presence</title>
+  <link rel="stylesheet" href="/static/css/tailwind.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      background: #fff;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      border-color: #3b82f6;
+    }
+    .btn-primary {
+      padding: 0.5rem 1.25rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: #fff;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+      border: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+    .btn-outline {
+      padding: 0.4rem 1rem;
+      background: #fff;
+      color: #1e293b;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    .card {
+      background: #fff;
+      border-radius: 1.25rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 1.5rem;
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+    }
+    .header-gradient {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .status-active {
+      color: #059669;
+    }
+    .status-inactive {
+      color: #dc2626;
+    }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+    
+    /* Modern input with proper icon spacing */
+    .input-with-icon {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-with-icon i {
+      position: absolute;
+      left: 12px;
+      pointer-events: none;
+      color: #94a3b8;
+      z-index: 1;
+    }
+    .input-with-icon input {
+      padding-left: 40px !important;
+      padding-right: 12px;
+    }
+    .input-with-icon input:focus ~ i {
+      color: #3b82f6;
+    }
+    
+    /* Login form styling */
+    .login-card {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-header img {
+      width: 60px;
+      height: 60px;
+      margin-bottom: 1rem;
+    }
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+    .login-subtitle {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .login-form .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .login-form label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #334155;
+    }
+    .login-form .remember-forgot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+    .login-form .remember-forgot .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    .login-form .remember-forgot a {
+      color: #3b82f6;
+      font-size: 0.875rem;
+      text-decoration: none;
+    }
+    .login-form .remember-forgot a:hover {
+      text-decoration: underline;
+    }
+    .login-button {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .login-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+    .login-status {
+      text-align: center;
+      margin-top: 1rem;
+      min-height: 1.5rem;
+      font-size: 0.875rem;
+    }
+    .login-status.error {
+      color: #dc2626;
+    }
+    
+    /* Enhanced password toggle styling */
+    .password-container {
+      position: relative;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      padding: 4px;
+      margin: 0;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .password-toggle:hover {
+      color: #3b82f6;
+      background-color: #f1f5f9;
+    }
+    .password-toggle:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    /* Make room for toggle button */
+    .form-input.password-input {
+      padding-right: 48px !important;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center">
+            <i class="fas fa-shield-alt text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold header-gradient">Admin Panel</h1>
+            <p class="text-gray-600">Smart Presence — Universitas Harkat Negeri</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-sm text-gray-500">SuperAdmin</div>
+          <div class="w-3 h-3 bg-green-500 rounded-full pulse"></div>
+        </div>
+      </div>
+    </header>
+
+    <div id="admin-login-card" class="login-card">
+      <div class="login-header">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-user-shield text-blue-600 text-2xl"></i>
+        </div>
+        <h2 class="login-title">Login Administrator</h2>
+        <p class="login-subtitle">Masukkan kredensial untuk mengakses panel admin</p>
+      </div>
+      
+      <div class="login-form">
+        <div class="form-group">
+          <label for="admin-user">Username</label>
+          <div class="input-with-icon">
+            <i class="fas fa-user"></i>
+            <input id="admin-user" class="form-input" placeholder="Masukkan username" />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="admin-pass">Password</label>
+          <div class="input-with-icon password-container">
+            <i class="fas fa-lock"></i>
+            <input id="admin-pass" type="password" class="form-input password-input" placeholder="Masukkan password" />
+            <button type="button" id="toggle-pass" class="password-toggle" aria-label="Lihat Password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="remember-forgot">
+          <div class="checkbox-label">
+            <input id="remember" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <label for="remember">Ingat saya</label>
+          </div>
+          <a href="#">Lupa password?</a>
+        </div>
+        
+        <button id="btn-admin-login" class="login-button">
+          <i class="fas fa-sign-in-alt"></i>
+          Masuk ke Panel Admin
+        </button>
+        
+        <div id="admin-login-status" class="login-status"></div>
+      </div>
+    </div>
+
+    <div id="admin-panel" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Manajemen Data Mahasiswa</h2>
+          <p class="text-gray-600">Kelola dan pantau data mahasiswa sistem absensi</p>
+        </div>
+        <button id="btn-logout" class="btn-outline flex items-center gap-2">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="card bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-blue-700 font-medium">Total Mahasiswa</p>
+              <p class="text-2xl font-bold text-blue-900" id="total-students">0</p>
+            </div>
+            <i class="fas fa-users text-blue-500 text-2xl"></i>
+          </div>
+        </div>
+        <div class="card bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-emerald-700 font-medium">Sudah Terdaftar</p>
+              <p class="text-2xl font-bold text-emerald-900" id="registered-students">0</p>
+            </div>
+            <i class="fas fa-user-check text-emerald-500 text-2xl"></i>
+          </div>
+        </div>
+        <div class="card bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-amber-700 font-medium">Belum Terdaftar</p>
+              <p class="text-2xl font-bold text-amber-900" id="unregistered-students">0</p>
+            </div>
+            <i class="fas fa-user-clock text-amber-500 text-2xl"></i>
+          </div>
+        </div>
+        <div class="card bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-purple-700 font-medium">Aktif Hari Ini</p>
+              <p class="text-2xl font-bold text-purple-900">12</p>
+            </div>
+            <i class="fas fa-bolt text-purple-500 text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <h3 class="text-xl font-semibold text-gray-900">Daftar Mahasiswa</h3>
+          <div class="flex gap-2">
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <input type="text" placeholder="Cari mahasiswa..." class="form-input pl-10 w-64" />
+            </div>
+            <button class="btn-outline flex items-center gap-2">
+              <i class="fas fa-filter"></i>
+              Filter
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIM</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semester</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jurusan</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody" class="bg-white divide-y divide-gray-200">
+              <!-- Data will be populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <i class="fas fa-user-plus"></i>
+          Tambah Mahasiswa Baru
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <input id="s-nim" class="form-input" placeholder="NIM" />
+          <input id="s-nama" class="form-input" placeholder="Nama Lengkap" />
+          <input id="s-semester" class="form-input" placeholder="Semester" />
+          <select id="s-kelas" class="form-input">
+            <option value="">Pilih Kelas</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+          </select>
+          <input id="s-jurusan" class="form-input" placeholder="Jurusan" />
+        </div>
+        <div class="mt-4 flex gap-3">
+          <button id="btn-create-student" class="btn-primary flex items-center gap-2">
+            <i class="fas fa-plus-circle"></i>
+            Tambah Mahasiswa
+          </button>
+          <button class="btn-outline flex items-center gap-2">
+            <i class="fas fa-upload"></i>
+            Import CSV
+          </button>
+        </div>
+        <div id="create-status" class="mt-3 text-sm text-center min-h-5"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <i class="fas fa-code"></i>
+          Dokumentasi API
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-medium text-gray-900 mb-2">Endpoints Utama</h4>
+            <ul class="text-sm text-gray-700 space-y-1">
+              <li><code class="bg-white px-2 py-1 rounded">POST /api/students</code></li>
+              <li><code class="bg-white px-2 py-1 rounded">GET /api/students</code></li>
+              <li><code class="bg-white px-2 py-1 rounded">PUT /api/students/{id}</code></li>
+              <li><code class="bg-white px-2 py-1 rounded">DELETE /api/students/{id}</code></li>
+            </ul>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-medium text-gray-900 mb-2">Authentication</h4>
+            <p class="text-sm text-gray-700">
+              Semua endpoint memerlukan header <code class="bg-white px-2 py-1 rounded">Authorization: Bearer {token}</code>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/alpine.min.js" defer></script>
+  <script src="/static/js/admin.js"></script>
+  <script>
+    // Toggle password visibility
+    document.addEventListener('DOMContentLoaded', function() {
+      const passInput = document.getElementById('admin-pass');
+      const toggleBtn = document.getElementById('toggle-pass');
+      
+      if (passInput && toggleBtn) {
+        toggleBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const icon = toggleBtn.querySelector('i');
+          
+          if (passInput.type === 'password') {
+            passInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+          } else {
+            passInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+          }
+          
+          // Keep focus on the input for better UX
+          passInput.focus();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
